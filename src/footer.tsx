@@ -50,6 +50,7 @@ export const Footer = ({
             assistant: {
               id: `${newMessageId}-a`,
               content: "",
+              reasoning: "",
               role: "assistant",
             },
             tokens: 0,
@@ -108,17 +109,27 @@ export const Footer = ({
           });
 
           // ストリームからテキストを取得し、メッセージを更新する
-          for await (const textPart of result.textStream) {
+          for await (const part of result.fullStream) {
             setMessages((prev) => {
               const next = prev.map((msg) => {
                 if (msg.id === newMessageId && msg.assistant) {
-                  return {
-                    ...msg,
-                    assistant: {
-                      ...msg.assistant,
-                      content: msg.assistant.content + textPart,
-                    },
-                  };
+                  if (part.type === "text-delta") {
+                    return {
+                      ...msg,
+                      assistant: {
+                        ...msg.assistant,
+                        content: msg.assistant.content + part.text,
+                      },
+                    };
+                  } else if (part.type === "reasoning-delta") {
+                    return {
+                      ...msg,
+                      assistant: {
+                        ...msg.assistant,
+                        reasoning: (msg.assistant.reasoning ?? "") + part.text,
+                      },
+                    };
+                  }
                 }
                 return msg;
               });

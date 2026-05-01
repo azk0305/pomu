@@ -5,8 +5,9 @@ export const Messages = ({ chatMessages }: { chatMessages: Message[] }) => {
   return (
     <box>
       {chatMessages.map((chatMessage, index) => {
-        const displayUserText = `You:\n${chatMessage.user.content}`;
-        const displayAssistantText = `Com:\n`;
+        const displayUserText = `You:\n\n${chatMessage.user.content}`;
+        const displayAssistantName = `Com:`;
+        const displayAssistantText = "";
 
         return (
           <box key={index}>
@@ -17,6 +18,15 @@ export const Messages = ({ chatMessages }: { chatMessages: Message[] }) => {
             </box>
 
             <box>
+              <text marginX={1} marginTop={1} fg={"white"}>
+                {displayAssistantName}
+              </text>
+
+              {chatMessage.assistant?.reasoning && (
+                <text margin={1} fg={"gray"} attributes={TextAttributes.DIM}>
+                  {`Thinking:\n${chatMessage.assistant.reasoning}`}
+                </text>
+              )}
               <text
                 margin={1}
                 fg={"white"}
@@ -27,7 +37,10 @@ export const Messages = ({ chatMessages }: { chatMessages: Message[] }) => {
                 }
               >
                 {displayAssistantText}
-                {chatMessage.assistant?.content || "Thinking..."}
+                {chatMessage.assistant?.content ||
+                  (chatMessage.assistant?.reasoning
+                    ? "Responding..."
+                    : "Thinking...")}
               </text>
             </box>
 

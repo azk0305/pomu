@@ -17,5 +17,6 @@ export interface User {
 export interface Assistant {
   id: string;
   content: string;
+  reasoning?: string;
   role: string;
 }
