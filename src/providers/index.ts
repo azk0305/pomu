@@ -1,31 +1,29 @@
 import { google } from "@ai-sdk/google";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import dotenv from "dotenv";
-import type { ModelOptions } from "../types/ModelOptions";
 
 dotenv.config();
 
 export const getModel = (
   provider: string,
+  name: string | null,
   modelId: string,
-  options: Partial<ModelOptions>,
-): ModelOptions => {
-  if (provider === "lmstudio") {
+  options: any,
+): any => {
+  if (provider === "openai-compatible") {
     return {
       model: createOpenAICompatible({
-        name: "lmstudio",
-        baseURL: "http://localhost:1234/v1",
+        name: name ?? "lmstudio",
+        apiKey: process.env.OPENAI_API_KEY,
+        baseURL: process.env.OPENAI_API_BASE_URL ?? "http://localhost:1234/v1",
+        includeUsage: true,
       })(modelId),
-      maxOutputTokens: options.maxOutputTokens ?? 8192,
-      temperature: options.temperature ?? 1.0,
+      ...options,
     };
   } else if (provider === "google") {
     return {
       model: google(modelId),
-      maxOutputTokens: options.maxOutputTokens ?? 65536,
-      temperature: options.temperature ?? 1.0,
-      topP: options.topP ?? 0.95,
-      topK: options.topK ?? 64,
+      ...options,
     };
   }
   throw new Error(`Unknown provider or modelId: ${provider}, ${modelId}`);

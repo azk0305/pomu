@@ -56,21 +56,44 @@ export async function sendMessage({
   ];
 
   // AIモデルを呼び出す
-  // const model = getModel("lmstudio", "qwen3.5-9b-ud-japanese-imatrix", {
+  const model = getModel("openai-compatible", "xiaomi", "mimo-v2.5", {
+    temperature: 1.0,
+    topP: 0.95,
+    presencePenalty: 0,
+    frequencyPenalty: 0,
+    providerOptions: {
+      xiaomi: {
+        thinking: {
+          type: "enabled",
+        },
+      },
+    },
+  });
+  // const model = getModel("google", null, "gemma-4-31b-it", {
+  //   maxOutputTokens: 65536,
+  //   temperature: 1.0,
+  //   topP: 0.95,
+  //   topK: 64,
+  //   providerOptions: {
+  //     google: {
+  //       generationConfig: {
+  //         thinkingConfig: {
+  //           thinkingLevel: "MINIMAL",
+  //         },
+  //       },
+  //     },
+  //   },
+  // });
+  // const model = getModel("openai-compatible", "lmstudio", "qwen3.5-9b-ud-japanese-imatrix", {
   //   maxOutputTokens: 32768,
   //   temperature: 1.0,
   // });
-  const model = getModel("google", "gemma-4-31b-it", {
-    maxOutputTokens: 65536,
-    temperature: 1.0,
-    topP: 0.95,
-    topK: 64,
-  });
 
   const result = streamText({
     ...model,
     system: SYSTEM_PROMPT,
     messages: prompts,
+    providerOptions: model.providerOptions,
     onFinish: (result) => {
       const tokens = result.usage.totalTokens ?? 0;
       setMessages((prev) => {
