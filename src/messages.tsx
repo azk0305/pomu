@@ -27,6 +27,12 @@ export const Messages = ({ chatMessages }: { chatMessages: Message[] }) => {
                   {`Thinking:\n${chatMessage.assistant.reasoning}`}
                 </text>
               )}
+              {chatMessage.tools?.content.map((tool, toolIndex) => (
+                <text key={toolIndex} margin={1} fg={"cyan"} attributes={TextAttributes.DIM}>
+                  {`Tool: ${tool.toolName}(${tool.type === "call" ? tool.output.value : "..."}) ${tool.type === "result" ? `-> ${tool.output.value}` : ""
+                    }`}
+                </text>
+              ))}
               <text
                 margin={1}
                 fg={"white"}

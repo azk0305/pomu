@@ -1,10 +1,13 @@
 import type React from "react";
 import type { Message } from "../types/Message";
 import { getModel } from "../providers";
-import { streamText, type ModelMessage } from "ai";
+import { streamText, type ModelMessage, tool, type ToolResultPart, stepCountIs } from "ai";
+import { getCurrentTime } from "../tools/getCurrentTime";
+import { z } from "zod";
 
-const SYSTEM_PROMPT =
-  "You are a helpful coding assistant. Provide clear and concise answers.";
+const SYSTEM_PROMPT = `
+You are a helpful assistant operating inside 'pomu', an agent harness. You provide clear and concise answers.
+`;
 
 interface SendMessageOptions {
   userContent: string;
@@ -33,57 +36,109 @@ export async function sendMessage({
       reasoning: "",
       role: "assistant",
     },
+    tools: {
+      id: `${newMessageId}-t`,
+      content: [],
+    },
     tokens: 0,
   };
   setMessages((prev) => [...prev, newMessage]);
 
   // プロンプトを整形する
-  const prompts: ModelMessage[] = [
-    ...(messagesRef.current ?? []).flatMap((msg) => [
+  const prompts: ModelMessage[] = [];
+  (messagesRef.current ?? []).forEach((msg) => {
+    // User
+    prompts.push(
       {
-        role: msg.user.role,
+        role: "user",
         content: msg.user.content,
-      } as ModelMessage,
+      },
+    );
+    // Tool
+    if (msg.tools?.content) {
+      const toolCalls: ToolResultPart[] = [];
+      for (const tool of msg.tools?.content) {
+        toolCalls.push({
+          toolCallId: tool.toolCallId,
+          toolName: tool.toolName,
+          type: "tool-result",
+          output: {
+            type: "text",
+            value: tool.output.value,
+          },
+        })
+        prompts.push(
+          {
+            role: "tool",
+            content: toolCalls,
+          }
+        );
+      }
+    }
+    // Assistant
+    prompts.push(
       {
-        role: msg.assistant.role,
+        role: "assistant",
         content: msg.assistant.content,
-      } as ModelMessage,
-    ]),
+      },
+    );
+  });
+  // new user message
+  prompts.push(
     {
       role: "user",
       content: userContent,
-    } as ModelMessage,
-  ];
+    }
+  );
+
+  // ...(messagesRef.current ?? []).flatMap((msg) => (
+
+  // ));
+  // ...(messagesRef.current ?? []).flatMap((msg) => [
+  //   {
+  //     role: msg.user.role,
+  //     content: msg.user.content,
+  //   } as User,
+  //   {
+  //     role: msg.assistant.role,
+  //     content: msg.assistant.content,
+  //   } as Assistant,
+  // ]),
+  // {
+  //   role: "user",
+  //   content: userContent,
+  // } as User,
+  //];
 
   // AIモデルを呼び出す
-  const model = getModel("openai-compatible", "xiaomi", "mimo-v2.5", {
-    temperature: 1.0,
-    topP: 0.95,
-    presencePenalty: 0,
-    frequencyPenalty: 0,
-    providerOptions: {
-      xiaomi: {
-        thinking: {
-          type: "enabled",
-        },
-      },
-    },
-  });
-  // const model = getModel("google", null, "gemma-4-31b-it", {
-  //   maxOutputTokens: 65536,
+  // const model = getModel("openai-compatible", "xiaomi", "mimo-v2.5", {
   //   temperature: 1.0,
   //   topP: 0.95,
-  //   topK: 64,
+  //   presencePenalty: 0,
+  //   frequencyPenalty: 0,
   //   providerOptions: {
-  //     google: {
-  //       generationConfig: {
-  //         thinkingConfig: {
-  //           thinkingLevel: "MINIMAL",
-  //         },
+  //     xiaomi: {
+  //       thinking: {
+  //         type: "enabled",
   //       },
   //     },
   //   },
   // });
+  const model = getModel("google", null, "gemma-4-31b-it", {
+    maxOutputTokens: 65536,
+    temperature: 1.0,
+    topP: 0.95,
+    topK: 64,
+    providerOptions: {
+      google: {
+        generationConfig: {
+          thinkingConfig: {
+            thinkingLevel: "MINIMAL",
+          },
+        },
+      },
+    },
+  });
   // const model = getModel("openai-compatible", "lmstudio", "qwen3.5-9b-ud-japanese-imatrix", {
   //   maxOutputTokens: 32768,
   //   temperature: 1.0,
@@ -94,6 +149,18 @@ export async function sendMessage({
     system: SYSTEM_PROMPT,
     messages: prompts,
     providerOptions: model.providerOptions,
+    stopWhen: stepCountIs(10),
+    tools: {
+      getCurrentTime: tool({
+        description: "Get the current time",
+        inputSchema: z.object({
+          timezone: z.string().optional(),
+        }),
+        execute: async ({ timezone }) => {
+          return getCurrentTime(timezone);
+        },
+      }),
+    },
     onFinish: (result) => {
       const tokens = result.usage.totalTokens ?? 0;
       setMessages((prev) => {
@@ -115,7 +182,7 @@ export async function sendMessage({
   for await (const part of result.fullStream) {
     setMessages((prev) => {
       const next = prev.map((msg) => {
-        if (msg.id === newMessageId && msg.assistant) {
+        if (msg.id === newMessageId) {
           if (part.type === "text-delta") {
             return {
               ...msg,
@@ -131,6 +198,25 @@ export async function sendMessage({
                 ...msg.assistant,
                 reasoning: (msg.assistant.reasoning ?? "") + part.text,
               },
+            };
+          } else if (part.type === "tool-result") {
+            return {
+              ...msg,
+              tools: {
+                ...msg.tools,
+                content: [
+                  ...msg.tools?.content ?? [],
+                  {
+                    toolCallId: part.toolCallId,
+                    toolName: part.toolName,
+                    type: part.type,
+                    output: {
+                      type: "text",
+                      value: part.output,
+                    },
+                  }
+                ]
+              }
             };
           }
         }
