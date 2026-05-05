@@ -16,7 +16,7 @@ export const getModel = (
       model: createOpenAICompatible({
         name: name ?? "lmstudio",
         apiKey: process.env.OPENAI_API_KEY,
-        baseURL: process.env.OPENAI_API_BASE_URL ?? "http://localhost:1234/v1",
+        baseURL: process.env.OPENAI_API_BASE_URL ?? "http://localhost:8080/v1",
         includeUsage: true,
       })(modelId),
       ...options,

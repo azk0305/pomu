@@ -124,25 +124,25 @@ export async function sendMessage({
   //     },
   //   },
   // });
-  const model = getModel("google", null, "gemma-4-31b-it", {
-    maxOutputTokens: 65536,
-    temperature: 1.0,
-    topP: 0.95,
-    topK: 64,
-    providerOptions: {
-      google: {
-        generationConfig: {
-          thinkingConfig: {
-            thinkingLevel: "MINIMAL",
-          },
-        },
-      },
-    },
-  });
-  // const model = getModel("openai-compatible", "lmstudio", "qwen3.5-9b-ud-japanese-imatrix", {
-  //   maxOutputTokens: 32768,
+  // const model = getModel("google", null, "gemma-4-31b-it", {
+  //   maxOutputTokens: 65536,
   //   temperature: 1.0,
+  //   topP: 0.95,
+  //   topK: 64,
+  //   providerOptions: {
+  //     google: {
+  //       generationConfig: {
+  //         thinkingConfig: {
+  //           thinkingLevel: "MINIMAL",
+  //         },
+  //       },
+  //     },
+  //   },
   // });
+  const model = getModel("openai-compatible", "llama.cpp", "Qwen3.6", {
+    maxOutputTokens: 32768,
+    temperature: 1.0,
+  });
 
   const result = streamText({
     ...model,
