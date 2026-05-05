@@ -1,4 +1,3 @@
-import { tool } from "ai";
 import type { Command } from "./types";
 
 export const helpCommand: Command = {

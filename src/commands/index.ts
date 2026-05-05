@@ -1,8 +1,9 @@
 import type { Command, CommandContext } from "./types";
 import { exitCommand } from "./exit";
 import { helpCommand } from "./help";
+import { geminiCommand } from "./gemini";
 
-export const commands: Command[] = [exitCommand, helpCommand];
+export const commands: Command[] = [exitCommand, helpCommand, geminiCommand];
 
 export async function handleCommand(
   input: string,
