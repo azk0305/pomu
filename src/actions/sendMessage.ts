@@ -1,6 +1,6 @@
 import type React from "react";
 import type { Message } from "../types/Message";
-import { getModel } from "../providers";
+import { model } from "../config/model";
 import { streamText, type ModelMessage, tool, type ToolResultPart, stepCountIs } from "ai";
 import { getCurrentTime } from "../tools/getCurrentTime";
 import { z } from "zod";
@@ -91,59 +91,7 @@ export async function sendMessage({
     }
   );
 
-  // ...(messagesRef.current ?? []).flatMap((msg) => (
-
-  // ));
-  // ...(messagesRef.current ?? []).flatMap((msg) => [
-  //   {
-  //     role: msg.user.role,
-  //     content: msg.user.content,
-  //   } as User,
-  //   {
-  //     role: msg.assistant.role,
-  //     content: msg.assistant.content,
-  //   } as Assistant,
-  // ]),
-  // {
-  //   role: "user",
-  //   content: userContent,
-  // } as User,
-  //];
-
   // AIモデルを呼び出す
-  // const model = getModel("openai-compatible", "xiaomi", "mimo-v2.5", {
-  //   temperature: 1.0,
-  //   topP: 0.95,
-  //   presencePenalty: 0,
-  //   frequencyPenalty: 0,
-  //   providerOptions: {
-  //     xiaomi: {
-  //       thinking: {
-  //         type: "enabled",
-  //       },
-  //     },
-  //   },
-  // });
-  const model = getModel("google", null, "gemma-4-31b-it", {
-    maxOutputTokens: 65536,
-    temperature: 1.0,
-    topP: 0.95,
-    topK: 64,
-    providerOptions: {
-      google: {
-        generationConfig: {
-          thinkingConfig: {
-            thinkingLevel: "MINIMAL",
-          },
-        },
-      },
-    },
-  });
-  // const model = getModel("openai-compatible", "llama.cpp", "Qwen3.6", {
-  //   maxOutputTokens: 32768,
-  //   temperature: 1.0,
-  // });
-
   const result = streamText({
     ...model,
     system: SYSTEM_PROMPT,

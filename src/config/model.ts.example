@@ -1,0 +1,32 @@
+import { getModel } from "../providers";
+
+/**
+ * AI Model Configuration
+ * 
+ * You can customize the model and its options here.
+ * This file is ignored by Git, so you can change it freely.
+ */
+
+// Example for Google Gemini
+export const model = getModel("google", null, "gemma-2-9b-it", {
+  maxOutputTokens: 8192,
+  temperature: 1.0,
+  topP: 0.95,
+  topK: 64,
+  providerOptions: {
+    google: {
+      generationConfig: {
+        thinkingConfig: {
+          thinkingLevel: "MINIMAL",
+        },
+      },
+    },
+  },
+});
+
+// Example for OpenAI Compatible (e.g. LM Studio, Ollama)
+/*
+export const model = getModel("openai-compatible", "lmstudio", "model-id", {
+  temperature: 0.7,
+});
+*/
