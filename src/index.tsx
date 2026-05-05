@@ -9,7 +9,7 @@ import { Footer } from "./footer";
 import { Messages } from "./messages";
 import type { Message } from "./types/Message";
 
-const App = () => {
+const App = ({ onExit }: { onExit: () => void }) => {
   // チャットの画面を表示するために使うState
   const [messages, setMessages] = useState<Message[]>([]);
 
@@ -36,7 +36,11 @@ const App = () => {
       </scrollbox>
 
       {/* フッター部分（プロンプト入力用のテキストエリア） */}
-      <Footer messagesRef={messagesRef} setMessages={setMessages} />
+      <Footer
+        messagesRef={messagesRef}
+        setMessages={setMessages}
+        onExit={onExit}
+      />
     </box>
   );
 };
@@ -52,4 +56,4 @@ const renderer = await createCliRenderer({
   },
 });
 //renderer.console.toggle();
-createRoot(renderer).render(<App />);
+createRoot(renderer).render(<App onExit={() => renderer.destroy()} />);
