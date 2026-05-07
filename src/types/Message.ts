@@ -1,43 +1,35 @@
-// メッセージの型定義
-export interface Message {
+export type Role = "user" | "assistant" | "tool";
+
+export interface BaseMessage {
   id: string;
-  user: User;
-  assistant: Assistant;
-  tools: Tools;
-  tokens: number;
+  role: Role;
 }
 
-// ユーザーの型定義
-export interface User {
-  id: string;
+export interface UserMessage extends BaseMessage {
+  role: "user";
   content: string;
-  role: string;
 }
 
-// アシスタントの型定義
-export interface Assistant {
-  id: string;
+export interface AssistantMessage extends BaseMessage {
+  role: "assistant";
   content: string;
   reasoning?: string;
-  role: string;
+  toolCalls?: Array<{
+    toolCallId: string;
+    toolName: string;
+    input: any;
+  }>;
+  tokens?: number;
 }
 
-// ツールの型定義
-export interface Tools {
-  id: string;
-  content: Tool[];
-}
-
-// ツールの内容の型定義
-export interface Tool {
-  toolCallId: string;
-  toolName: string;
-  type: string;
-  output: {
+export interface ToolMessage extends BaseMessage {
+  role: "tool";
+  content: Array<{
+    toolCallId: string;
+    toolName: string;
     type: string;
-    value: string;
-  }
+    output: any;
+  }>;
 }
 
-// メッセージのアイテムの種類
-export type MessageItemType = User | Assistant | Tool;
+export type Message = UserMessage | AssistantMessage | ToolMessage;

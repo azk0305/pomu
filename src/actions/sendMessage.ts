@@ -1,7 +1,7 @@
 import type React from "react";
-import type { Message } from "../types/Message";
+import type { Message, AssistantMessage } from "../types/Message";
 import { model } from "../config/model";
-import { streamText, type ModelMessage, tool, type ToolResultPart, stepCountIs } from "ai";
+import { streamText, type ModelMessage, tool, stepCountIs } from "ai";
 import { getCurrentTime } from "../tools/getCurrentTime";
 import { z } from "zod";
 
@@ -20,76 +20,65 @@ export async function sendMessage({
   messagesRef,
   setMessages,
 }: SendMessageOptions) {
-  // 新しいメッセージの受け口を作成する
-  const newMessageId = crypto.randomUUID();
-
-  const newMessage: Message = {
-    id: newMessageId,
-    user: {
-      id: `${newMessageId}-u`,
-      content: userContent,
-      role: "user",
-    },
-    assistant: {
-      id: `${newMessageId}-a`,
-      content: "",
-      reasoning: "",
-      role: "assistant",
-    },
-    tools: {
-      id: `${newMessageId}-t`,
-      content: [],
-    },
-    tokens: 0,
+  // ユーザーメッセージを追加
+  const userMessageId = crypto.randomUUID();
+  const userMessage: Message = {
+    id: userMessageId,
+    role: "user",
+    content: userContent,
   };
-  setMessages((prev) => [...prev, newMessage]);
 
-  // プロンプトを整形する
-  const prompts: ModelMessage[] = [];
-  (messagesRef.current ?? []).forEach((msg) => {
-    // User
-    prompts.push(
-      {
-        role: "user",
-        content: msg.user.content,
-      },
-    );
-    // Tool
-    if (msg.tools?.content) {
-      const toolCalls: ToolResultPart[] = [];
-      for (const tool of msg.tools?.content) {
-        toolCalls.push({
-          toolCallId: tool.toolCallId,
-          toolName: tool.toolName,
-          type: "tool-result",
-          output: {
-            type: "text",
-            value: tool.output.value,
-          },
-        })
-        prompts.push(
-          {
-            role: "tool",
-            content: toolCalls,
-          }
-        );
-      }
-    }
-    // Assistant
-    prompts.push(
-      {
-        role: "assistant",
-        content: msg.assistant.content,
-      },
-    );
+  setMessages((prev) => {
+    const next = [...prev, userMessage];
+    if (messagesRef.current) messagesRef.current = next;
+    return next;
   });
-  // new user message
-  prompts.push(
-    {
-      role: "user",
-      content: userContent,
+
+  // プロンプトの整形 (CoreMessage形式に変換)
+  const prompts: ModelMessage[] = (messagesRef.current ?? []).map((msg) => {
+    switch (msg.role) {
+      case "user":
+        return { role: "user", content: msg.content };
+
+      case "assistant":
+        // If there are tool calls, content MUST be an array of parts
+        if (msg.toolCalls && msg.toolCalls.length > 0) {
+          return {
+            role: "assistant",
+            content: [
+              { type: "text", text: msg.content || "" },
+              ...msg.toolCalls.map((tc) => ({
+                type: "tool-call" as const,
+                toolCallId: tc.toolCallId,
+                toolName: tc.toolName,
+                input: tc.input,
+              })),
+            ],
+          };
+        }
+        // Otherwise, content can just be a string
+        return { role: "assistant", content: msg.content };
+
+      case "tool":
+        return {
+          role: "tool",
+          content: msg.content.map((c) => ({
+            type: "tool-result",
+            toolCallId: c.toolCallId,
+            toolName: c.toolName,
+            output: c.output, // Note: some versions of the SDK use 'result' instead of 'output'
+          })),
+        };
+
+      default:
+        // Fallback for safety
+        return { role: "user", content: "" };
     }
-  );
+  });
+
+  // アシスタントメッセージの器を事前に作成（あるいは最初のレスポンス時に作成）
+  let currentAssistantMessageId = crypto.randomUUID();
+  let hasCreatedAssistantMessage = false;
 
   // AIモデルを呼び出す
   const result = streamText({
@@ -99,7 +88,7 @@ export async function sendMessage({
     providerOptions: model.providerOptions,
     stopWhen: stepCountIs(10),
     tools: {
-      getCurrentTime: tool({
+      get_current_time: tool({
         description: "Get the current time",
         inputSchema: z.object({
           timezone: z.string().optional(),
@@ -113,66 +102,93 @@ export async function sendMessage({
       const tokens = result.usage.totalTokens ?? 0;
       setMessages((prev) => {
         const next = prev.map((msg) => {
-          if (msg.id === newMessageId) {
+          if (
+            msg.id === currentAssistantMessageId &&
+            msg.role === "assistant"
+          ) {
             return { ...msg, tokens };
           }
           return msg;
         });
-        if (messagesRef.current) {
-          messagesRef.current = next;
-        }
+        if (messagesRef.current) messagesRef.current = next;
         return next;
       });
     },
   });
 
-  // ストリームからテキストを取得し、メッセージを更新する
+  // ストリーム処理
   for await (const part of result.fullStream) {
     setMessages((prev) => {
-      const next = prev.map((msg) => {
-        if (msg.id === newMessageId) {
+      let next = [...prev];
+
+      // アシスタントメッセージが必要なタイプの場合、まだなければ作成
+      if (
+        !hasCreatedAssistantMessage &&
+        (part.type === "text-delta" ||
+          part.type === "reasoning-delta" ||
+          part.type === "tool-call")
+      ) {
+        currentAssistantMessageId = crypto.randomUUID();
+        const newAssistantMsg: AssistantMessage = {
+          id: currentAssistantMessageId,
+          role: "assistant",
+          content: "",
+          reasoning: "",
+          toolCalls: [],
+        };
+        next.push(newAssistantMsg);
+        hasCreatedAssistantMessage = true;
+      }
+
+      // 各パートに応じて更新
+      next = next.map((msg) => {
+        if (msg.id === currentAssistantMessageId && msg.role === "assistant") {
           if (part.type === "text-delta") {
+            return { ...msg, content: msg.content + part.text };
+          }
+          if (part.type === "reasoning-delta") {
+            return { ...msg, reasoning: (msg.reasoning ?? "") + part.text };
+          }
+          if (part.type === "tool-call") {
             return {
               ...msg,
-              assistant: {
-                ...msg.assistant,
-                content: msg.assistant.content + part.text,
-              },
-            };
-          } else if (part.type === "reasoning-delta") {
-            return {
-              ...msg,
-              assistant: {
-                ...msg.assistant,
-                reasoning: (msg.assistant.reasoning ?? "") + part.text,
-              },
-            };
-          } else if (part.type === "tool-result") {
-            return {
-              ...msg,
-              tools: {
-                ...msg.tools,
-                content: [
-                  ...msg.tools?.content ?? [],
-                  {
-                    toolCallId: part.toolCallId,
-                    toolName: part.toolName,
-                    type: part.type,
-                    output: {
-                      type: "text",
-                      value: part.output,
-                    },
-                  }
-                ]
-              }
+              toolCalls: [
+                ...(msg.toolCalls ?? []),
+                {
+                  type: "tool-call" as const,
+                  toolCallId: part.toolCallId,
+                  toolName: part.toolName,
+                  input: part.input,
+                },
+              ],
             };
           }
         }
         return msg;
       });
-      if (messagesRef.current) {
-        messagesRef.current = next;
+
+      // Tool Result は新しいメッセージとして追加
+      if (part.type === "tool-result") {
+        const toolMsg: Message = {
+          id: crypto.randomUUID(),
+          role: "tool",
+          content: [
+            {
+              toolCallId: part.toolCallId,
+              toolName: part.toolName,
+              type: part.type,
+              output: part.output,
+            },
+          ],
+        };
+        next.push(toolMsg);
+        // 次のアシスタントの回答のためにフラグをリセット（必要なら新しいIDを発行）
+        // ここでは AI SDK の maxSteps により次のターンが自動で始まるため、
+        // 次の text-delta などが来た時に新しい AssistantMessage を作るようにする
+        hasCreatedAssistantMessage = false;
       }
+
+      if (messagesRef.current) messagesRef.current = next;
       return next;
     });
   }
