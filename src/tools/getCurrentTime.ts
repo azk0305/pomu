@@ -1,7 +1,7 @@
 // 現在時刻を取得
-export const getCurrentTime = (timezone: string = "ja-JP"): any => {
+export const getCurrentTime = (locale: string = "ja-JP"): any => {
   const date = new Date();
-  return { type: "text", value: date.toLocaleString(timezone) };
+  return { type: "text", value: date.toLocaleString(locale) };
 };
 
 if (process.argv[1] === __filename) {

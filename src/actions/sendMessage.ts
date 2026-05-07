@@ -1,9 +1,8 @@
 import type React from "react";
 import type { Message, AssistantMessage } from "../types/Message";
 import { model } from "../config/model";
-import { streamText, type ModelMessage, tool, stepCountIs } from "ai";
-import { getCurrentTime } from "../tools/getCurrentTime";
-import { z } from "zod";
+import { streamText, type ModelMessage, stepCountIs } from "ai";
+import { tools } from "../tools";
 
 const SYSTEM_PROMPT = `
 You are a helpful assistant operating inside 'pomu', an agent harness. You provide clear and concise answers.
@@ -87,17 +86,7 @@ export async function sendMessage({
     messages: prompts,
     providerOptions: model.providerOptions,
     stopWhen: stepCountIs(10),
-    tools: {
-      get_current_time: tool({
-        description: "Get the current time",
-        inputSchema: z.object({
-          timezone: z.string().optional(),
-        }),
-        execute: async ({ timezone }) => {
-          return getCurrentTime(timezone);
-        },
-      }),
-    },
+    tools,
     onFinish: (result) => {
       const tokens = result.usage.totalTokens ?? 0;
       setMessages((prev) => {
