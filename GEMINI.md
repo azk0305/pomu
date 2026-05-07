@@ -36,6 +36,8 @@ A Terminal User Interface (TUI) chat application built with React and OpenTUI, l
 
 ## Development Conventions
 
+- **AI SDK Version:** This project uses **Vercel AI SDK v6**. Always ensure implementations are compatible with v6 and avoid deprecated APIs.
+- **Documentation First:** Before implementing AI features, check the latest [Vercel AI SDK v6 documentation](https://sdk.vercel.ai/docs) to ensure the use of current patterns and types.
 - **TypeScript:** The project is strictly typed. Always define interfaces/types in `src/types/`.
 - **Component Structure:** Use functional components. Prefer organizing UI components in the root of `src/` and logic in subdirectories like `actions/` or `providers/`.
 - **State Management:** Uses React's `useState` and `useRef` for managing chat state and history.
