@@ -1,33 +1,30 @@
 import type { Command } from "./types";
 import { spawn } from "bun";
+import type { Message } from "../types/Message";
 
 export const geminiCommand: Command = {
   name: "gemini",
   description: "Delegate a command to Gemini",
   execute: async (args, context) => {
-    // User Messageを表示
-    const newMessageId = crypto.randomUUID();
-    const newMessage = {
-      id: newMessageId,
-      user: {
-        id: `${newMessageId}-u`,
-        content: "/gemini " + args.join(" "),
-        role: "user" as const,
-      },
-      assistant: {
-        id: `${newMessageId}-a`,
-        content: "",
-        reasoning: "",
-        role: "assistant" as const,
-      },
-      tools: {
-        id: `${newMessageId}-t`,
-        content: [],
-      },
+    const userMessageId = crypto.randomUUID();
+    const assistantMessageId = crypto.randomUUID();
+
+    const userMessage: Message = {
+      id: userMessageId,
+      role: "user",
+      content: "/gemini " + args.join(" "),
+    };
+
+    const assistantMessage: Message = {
+      id: assistantMessageId,
+      role: "assistant",
+      content: "",
+      reasoning: "",
       tokens: 0,
     };
+
     context.setMessages((prev) => {
-      const next = [...prev, newMessage];
+      const next = [...prev, userMessage, assistantMessage];
       if (context.messagesRef.current) {
         context.messagesRef.current = next;
       }
@@ -45,8 +42,8 @@ export const geminiCommand: Command = {
     // Assistant Messageを表示
     context.setMessages((prev) => {
       const next = prev.map((msg) => {
-        if (msg.id === newMessageId) {
-          return { ...msg, assistant: { ...msg.assistant, content: text } };
+        if (msg.id === assistantMessageId && msg.role === "assistant") {
+          return { ...msg, content: text };
         }
         return msg;
       });

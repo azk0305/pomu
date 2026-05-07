@@ -1,4 +1,5 @@
 import type { Command } from "./types";
+import type { Message } from "../types/Message";
 
 export const helpCommand: Command = {
   name: "help",
@@ -8,28 +9,23 @@ export const helpCommand: Command = {
       .map((c) => `/${c.name}: ${c.description}`)
       .join("\n");
 
-    const newMessageId = crypto.randomUUID();
-    const newMessage = {
-      id: newMessageId,
-      user: {
-        id: `${newMessageId}-u`,
-        content: "/help",
-        role: "user" as const,
-      },
-      assistant: {
-        id: `${newMessageId}-a`,
-        content: `Available commands:\n${helpMessage}`,
-        role: "assistant" as const,
-      },
-      tools: {
-        id: `${newMessageId}-t`,
-        content: [],
-      },
-      tokens: 0,
+    const userMessageId = crypto.randomUUID();
+    const assistantMessageId = crypto.randomUUID();
+
+    const userMessage: Message = {
+      id: userMessageId,
+      role: "user",
+      content: "/help",
+    };
+
+    const assistantMessage: Message = {
+      id: assistantMessageId,
+      role: "assistant",
+      content: `Available commands:\n${helpMessage}`,
     };
 
     context.setMessages((prev) => {
-      const next = [...prev, newMessage];
+      const next = [...prev, userMessage, assistantMessage];
       if (context.messagesRef.current) {
         context.messagesRef.current = next;
       }
