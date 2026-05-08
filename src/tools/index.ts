@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getCurrentTime } from "./getCurrentTime";
 import { listFilesTool } from "./listFiles";
 import { grepFilesTool } from "./grepFiles";
+import { readFileTool } from "./readFile";
 
 export const tools = {
   get_current_time: tool({
@@ -32,6 +33,17 @@ export const tools = {
     }),
     execute: async ({ keyword, dir, glob }: { keyword: string; dir?: string; glob?: string }) => {
       return grepFilesTool(keyword, dir, glob);
+    },
+  }),
+  read_file: tool({
+    description: "Read the content of a file with line numbers. Supports reading specific line ranges.",
+    inputSchema: z.object({
+      filename: z.string().describe("The path to the file to read"),
+      start_line: z.number().optional().default(1).describe("1-based start line number"),
+      end_line: z.number().optional().describe("1-based end line number (inclusive)"),
+    }),
+    execute: async ({ filename, start_line, end_line }: { filename: string; start_line: number; end_line?: number }) => {
+      return readFileTool(filename, start_line, end_line);
     },
   }),
 };
