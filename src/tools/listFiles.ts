@@ -2,7 +2,10 @@
 import { readdir } from "node:fs/promises";
 
 export const listFilesTool = async (dir: string = "."): Promise<any> => {
-  const files = await readdir(dir, { recursive: true });
+  // node_modules や .git を除外するフィルタリングを追加
+  const allFiles = await readdir(dir, { recursive: true });
+  const files = allFiles.filter(f => !f.includes('node_modules') && !f.includes('.git'));
+
   return {
     type: "json",
     value: JSON.stringify(files),
