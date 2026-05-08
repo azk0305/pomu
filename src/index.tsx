@@ -8,6 +8,7 @@ import { useState, useRef } from "react";
 import { Footer } from "./footer";
 import { Messages } from "./messages";
 import type { Message } from "./types/Message";
+import { ConfirmDialog } from "./components/ConfirmDialog";
 
 const App = ({ onExit }: { onExit: () => void }) => {
   // チャットの画面を表示するために使うState
@@ -41,6 +42,9 @@ const App = ({ onExit }: { onExit: () => void }) => {
         setMessages={setMessages}
         onExit={onExit}
       />
+
+      {/* 確認ダイアログ */}
+      <ConfirmDialog />
     </box>
   );
 };
