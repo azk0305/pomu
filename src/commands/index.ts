@@ -1,12 +1,16 @@
 import type { Command, CommandContext } from "./types";
 import { exitCommand } from "./exit";
 import { helpCommand } from "./help";
+import { codexCommand } from "./codex";
+import { claudeCommand } from "./claude";
 import { geminiCommand } from "./gemini";
 import { testConfirmCommand } from "./testConfirm";
 
 export const commands: Command[] = [
   exitCommand,
   helpCommand,
+  codexCommand,
+  claudeCommand,
   geminiCommand,
   testConfirmCommand,
 ];

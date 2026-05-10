@@ -2,9 +2,9 @@ import type { Command } from "./types";
 import { spawn } from "bun";
 import type { Message } from "../types/Message";
 
-export const geminiCommand: Command = {
-  name: "gemini",
-  description: "Delegate a command to Gemini",
+export const codexCommand: Command = {
+  name: "codex",
+  description: "Delegate a command to Codex",
   execute: async (args, context) => {
     const userMessageId = crypto.randomUUID();
     const assistantMessageId = crypto.randomUUID();
@@ -12,7 +12,7 @@ export const geminiCommand: Command = {
     const userMessage: Message = {
       id: userMessageId,
       role: "user",
-      content: "/gemini " + args.join(" "),
+      content: "/codex " + args.join(" "),
     };
 
     const assistantMessage: Message = {
@@ -31,8 +31,8 @@ export const geminiCommand: Command = {
       return next;
     });
 
-    // Geminiにdelegate
-    const proc = spawn(["gemini", "--yolo", "-p", args.join(" ")], {
+    // Codexにdelegate
+    const proc = spawn(["codex", "exec", "--yolo", args.join(" ")], {
       cwd: process.cwd(),
       stdout: "pipe",
       stderr: "pipe",
