@@ -26,13 +26,12 @@ export const grepFilesTool = async (
       type: "text",
       value: stdout.trim(),
     };
-  } else if (exitCode === 1) {
+  } else {
+    const errorOutput = stderr.trim() || stdout.trim() || "No matches found.";
     return {
       type: "text",
-      value: "No matches found.",
+      value: `Ripgrep failed with exit code ${exitCode}:\n${errorOutput}`,
     };
-  } else {
-    throw new Error(`ripgrep failed with exit code ${exitCode}: ${stderr}`);
   }
 };
 

@@ -8,6 +8,7 @@ import { readFileTool } from "./readFile";
 import { makeDirTool } from "./makeDir";
 import { writeFileTool } from "./writeFile";
 import { editFileTool } from "./editFile";
+import { runCommandTool } from "./runCommand";
 
 export const tools = {
   get_current_time: tool({
@@ -130,6 +131,23 @@ export const tools = {
         return { type: "text", value: "Write operation cancelled by user." };
       }
       return writeFileTool(filename, content);
+    },
+  }),
+  run_command: tool({
+    description: "Run a shell command",
+    inputSchema: z.object({
+      command: z.string().describe("The command to run"),
+      args: z
+        .string()
+        .array()
+        .describe("Optional arguments to pass to the command"),
+    }),
+    execute: async ({ command, args }: { command: string; args: string[] }) => {
+      const confirmed = await confirmStore.ask(`Run command: ${command}?`);
+      if (!confirmed) {
+        return { type: "text", value: "Command execution cancelled by user." };
+      }
+      return runCommandTool(command, args);
     },
   }),
 };
