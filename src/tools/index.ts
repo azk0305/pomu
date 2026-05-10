@@ -7,6 +7,7 @@ import { grepFilesTool } from "./grepFiles";
 import { readFileTool } from "./readFile";
 import { makeDirTool } from "./makeDir";
 import { writeFileTool } from "./writeFile";
+import { editFileTool } from "./editFile";
 
 export const tools = {
   get_current_time: tool({
@@ -90,6 +91,31 @@ export const tools = {
       //   return { type: "text", value: "Directory creation cancelled by user." };
       // }
       return makeDirTool(dir);
+    },
+  }),
+  edit_file: tool({
+    description: "Edit a part of an existing file by replacing a specific string.",
+    inputSchema: z.object({
+      filename: z.string().describe("The path to the file to edit"),
+      old_string: z
+        .string()
+        .describe("The exact string to be replaced (provide enough context to be unique)"),
+      new_string: z.string().describe("The new string to replace with"),
+    }),
+    execute: async ({
+      filename,
+      old_string,
+      new_string,
+    }: {
+      filename: string;
+      old_string: string;
+      new_string: string;
+    }) => {
+      const confirmed = await confirmStore.ask(`Edit file: ${filename}?`);
+      if (!confirmed) {
+        return { type: "text", value: "Edit operation cancelled by user." };
+      }
+      return editFileTool(filename, old_string, new_string);
     },
   }),
   write_file: tool({
