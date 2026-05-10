@@ -85,10 +85,10 @@ export const tools = {
       dir: z.string().describe("The path to the directory to create"),
     }),
     execute: async ({ dir }: { dir: string }) => {
-      const confirmed = await confirmStore.ask(`Create directory: ${dir}?`);
-      if (!confirmed) {
-        return { type: "text", value: "Directory creation cancelled by user." };
-      }
+      // const confirmed = await confirmStore.ask(`Create directory: ${dir}?`);
+      // if (!confirmed) {
+      //   return { type: "text", value: "Directory creation cancelled by user." };
+      // }
       return makeDirTool(dir);
     },
   }),
