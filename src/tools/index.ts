@@ -1,10 +1,12 @@
 import { tool } from "ai";
 import { z } from "zod";
+import { confirmStore } from "../utils/confirmStore";
 import { getCurrentTime } from "./getCurrentTime";
 import { listFilesTool } from "./listFiles";
 import { grepFilesTool } from "./grepFiles";
 import { readFileTool } from "./readFile";
 import { makeDirTool } from "./makeDir";
+import { writeFileTool } from "./writeFile";
 
 export const tools = {
   get_current_time: tool({
@@ -83,7 +85,25 @@ export const tools = {
       dir: z.string().describe("The path to the directory to create"),
     }),
     execute: async ({ dir }: { dir: string }) => {
+      const confirmed = await confirmStore.ask(`Create directory: ${dir}?`);
+      if (!confirmed) {
+        return { type: "text", value: "Directory creation cancelled by user." };
+      }
       return makeDirTool(dir);
+    },
+  }),
+  write_file: tool({
+    description: "Write content to a file",
+    inputSchema: z.object({
+      filename: z.string().describe("The path to the file to write to"),
+      content: z.string().describe("The content to write to the file"),
+    }),
+    execute: async ({ filename, content }: { filename: string; content: string }) => {
+      const confirmed = await confirmStore.ask(`Write to file: ${filename}?`);
+      if (!confirmed) {
+        return { type: "text", value: "Write operation cancelled by user." };
+      }
+      return writeFileTool(filename, content);
     },
   }),
 };
