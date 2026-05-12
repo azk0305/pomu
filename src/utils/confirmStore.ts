@@ -1,3 +1,5 @@
+import * as readline from "node:readline/promises";
+
 type ConfirmRequest = {
   message: string;
   resolve: (value: boolean) => void;
@@ -6,6 +8,11 @@ type ConfirmRequest = {
 class ConfirmStore {
   private currentRequest: ConfirmRequest | null = null;
   private listeners: Set<() => void> = new Set();
+  private isHeadless: boolean = false;
+
+  setHeadlessMode(value: boolean) {
+    this.isHeadless = value;
+  }
 
   /**
    * Subscribes to changes in the store.
@@ -26,7 +33,21 @@ class ConfirmStore {
    * Asks the user for confirmation.
    * Returns a promise that resolves to true (confirmed) or false (cancelled).
    */
-  ask(message: string): Promise<boolean> {
+  async ask(message: string): Promise<boolean> {
+    if (this.isHeadless) {
+      const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+      });
+
+      try {
+        const answer = await rl.question(`${message} (y/N): `);
+        return answer.toLowerCase() === "y";
+      } finally {
+        rl.close();
+      }
+    }
+
     // If a request is already active, we reject the new one or queue it.
     // For simplicity, we just reject if another one is pending.
     if (this.currentRequest) {

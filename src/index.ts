@@ -4,6 +4,8 @@ import { createCliRenderer, ConsolePosition } from "@opentui/core";
 import { createRoot } from "@opentui/react";
 import { createElement } from "react";
 import { mkdir } from "node:fs/promises";
+import { runHeadless } from "./actions/runHeadless";
+import { confirmStore } from "./utils/confirmStore";
 
 const program = new Command();
 
@@ -11,10 +13,17 @@ program
   .name("pomu")
   .description("pomu - Perfectly Operational Multipurpose Unit, my personal AI assistant")
   .version("0.0.1")
-  // .option("")
-  .action(async () => {
+  .option("-p, --prompt <string>", "Run in headless mode with the given prompt")
+  .action(async (options) => {
     // ~/.pomu を作成
     mkdir("~/.pomu", { recursive: true });
+
+    if (options.prompt) {
+      // Headlessモードの実行
+      confirmStore.setHeadlessMode(true);
+      await runHeadless(options.prompt);
+      process.exit(0);
+    }
 
     // レンダラーを初期化
     const renderer = await createCliRenderer({
