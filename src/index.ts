@@ -27,6 +27,7 @@ program
       // Headlessモードの実行
       confirmStore.setHeadlessMode(true);
       await runHeadless(options.prompt);
+      process.stdin.pause();
       process.exit(0);
     }
 
