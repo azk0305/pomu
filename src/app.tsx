@@ -10,7 +10,7 @@ import { Messages } from "./messages";
 import type { Message } from "./types/Message";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 
-const App = ({ onExit }: { onExit: () => void }) => {
+export const App = ({ onExit }: { onExit: () => void }) => {
   // チャットの画面を表示するために使うState
   const [messages, setMessages] = useState<Message[]>([]);
 
@@ -48,16 +48,3 @@ const App = ({ onExit }: { onExit: () => void }) => {
     </box>
   );
 };
-
-const renderer = await createCliRenderer({
-  exitOnCtrlC: true,
-  consoleOptions: {
-    position: ConsolePosition.TOP,
-    sizePercent: 30,
-    colorInfo: "cyan",
-    colorWarn: "yellow",
-    colorError: "red",
-  },
-});
-//renderer.console.toggle();
-createRoot(renderer).render(<App onExit={() => renderer.destroy()} />);
