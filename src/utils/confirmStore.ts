@@ -9,9 +9,14 @@ class ConfirmStore {
   private currentRequest: ConfirmRequest | null = null;
   private listeners: Set<() => void> = new Set();
   private isHeadless: boolean = false;
+  private isYolo: boolean = false;
 
   setHeadlessMode(value: boolean) {
     this.isHeadless = value;
+  }
+
+  setYoloMode(value: boolean) {
+    this.isYolo = value;
   }
 
   /**
@@ -34,6 +39,10 @@ class ConfirmStore {
    * Returns a promise that resolves to true (confirmed) or false (cancelled).
    */
   async ask(message: string): Promise<boolean> {
+    if (this.isYolo) {
+      return Promise.resolve(true);
+    }
+
     if (this.isHeadless) {
       const rl = readline.createInterface({
         input: process.stdin,

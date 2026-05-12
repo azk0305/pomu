@@ -14,9 +14,14 @@ program
   .description("pomu - Perfectly Operational Multipurpose Unit, my personal AI assistant")
   .version("0.0.1")
   .option("-p, --prompt <string>", "Run in headless mode with the given prompt")
+  .option("--yolo", "Run in YOLO mode, automatically approving all tool executions")
   .action(async (options) => {
     // ~/.pomu を作成
-    mkdir("~/.pomu", { recursive: true });
+    // mkdir("~/.pomu", { recursive: true });
+
+    if (options.yolo) {
+      confirmStore.setYoloMode(true);
+    }
 
     if (options.prompt) {
       // Headlessモードの実行
