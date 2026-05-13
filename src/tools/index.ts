@@ -10,6 +10,7 @@ import { writeFileTool } from "./writeFile";
 import { editFileTool } from "./editFile";
 import { runCommandTool } from "./runCommand";
 
+// AIツールの集合
 export const tools = {
   get_current_time: tool({
     description: "Get the current date and time in the specified locale",
@@ -95,12 +96,15 @@ export const tools = {
     },
   }),
   edit_file: tool({
-    description: "Edit a part of an existing file by replacing a specific string.",
+    description:
+      "Edit a part of an existing file by replacing a specific string.",
     inputSchema: z.object({
       filename: z.string().describe("The path to the file to edit"),
       old_string: z
         .string()
-        .describe("The exact string to be replaced (provide enough context to be unique)"),
+        .describe(
+          "The exact string to be replaced (provide enough context to be unique)",
+        ),
       new_string: z.string().describe("The new string to replace with"),
     }),
     execute: async ({
@@ -125,7 +129,13 @@ export const tools = {
       filename: z.string().describe("The path to the file to write to"),
       content: z.string().describe("The content to write to the file"),
     }),
-    execute: async ({ filename, content }: { filename: string; content: string }) => {
+    execute: async ({
+      filename,
+      content,
+    }: {
+      filename: string;
+      content: string;
+    }) => {
       const confirmed = await confirmStore.ask(`Write to file: ${filename}?`);
       if (!confirmed) {
         return { type: "text", value: "Write operation cancelled by user." };

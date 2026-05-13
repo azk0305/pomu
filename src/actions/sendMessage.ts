@@ -11,6 +11,7 @@ interface SendMessageOptions {
   setMessages: (messages: (prev: Message[]) => Message[]) => void;
 }
 
+// ユーザーメッセージを送信し、AIの応答を取得する関数
 export async function sendMessage({
   userContent,
   messagesRef,
@@ -24,6 +25,7 @@ export async function sendMessage({
     content: userContent,
   };
 
+  // ユーザーメッセージをメッセージリストに追加して画面へ表示
   setMessages((prev) => {
     const next = [...prev, userMessage];
     if (messagesRef.current) messagesRef.current = next;
@@ -76,7 +78,7 @@ export async function sendMessage({
   let currentAssistantMessageId = crypto.randomUUID();
   let hasCreatedAssistantMessage = false;
 
-  // AIモデルを呼び出す
+  // AIモデルを呼び出してメッセージを受け取る
   const result = streamText({
     ...model,
     system: SYSTEM_PROMPT,
@@ -102,7 +104,7 @@ export async function sendMessage({
     },
   });
 
-  // ストリーム処理
+  // ストリームでの処理
   for await (const part of result.fullStream) {
     setMessages((prev) => {
       let next = [...prev];

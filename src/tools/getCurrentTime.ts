@@ -1,4 +1,4 @@
-// 現在時刻を取得
+// 現在時刻を取得（デフォルトで日本のロケール）
 export const getCurrentTime = (locale: string = "ja-JP"): any => {
   const date = new Date();
   return { type: "text", value: date.toLocaleString(locale) };

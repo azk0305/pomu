@@ -1,15 +1,11 @@
-import {
-  createCliRenderer,
-  TextAttributes,
-  ConsolePosition,
-} from "@opentui/core";
-import { createRoot } from "@opentui/react";
+import { TextAttributes } from "@opentui/core";
 import { useState, useRef } from "react";
 import { Footer } from "./footer";
 import { Messages } from "./messages";
 import type { Message } from "./types/Message";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 
+// TUIの画面定義
 export const App = ({ onExit }: { onExit: () => void }) => {
   // チャットの画面を表示するために使うState
   const [messages, setMessages] = useState<Message[]>([]);

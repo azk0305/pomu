@@ -1,6 +1,7 @@
 import type { Command } from "./types";
 import { confirmStore } from "../utils/confirmStore";
 
+// TestConfirmコマンド（確認ダイアログのテスト）の実装
 export const testConfirmCommand: Command = {
   name: "test-confirm",
   description: "Tests the confirmation dialog",

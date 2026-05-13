@@ -1,4 +1,4 @@
-// ディレクトリの作成
+// 指定した名前のディレクトリを作成
 import { mkdir } from "node:fs/promises";
 
 export const makeDirTool = async (dir: string): Promise<any> => {

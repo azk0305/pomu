@@ -3,8 +3,10 @@ import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import dotenv from "dotenv";
 import path from "path";
 
-dotenv.config({ path: path.resolve(__dirname, '../../', '.env') });
+// 環境変数（.env）の読み込み
+dotenv.config({ path: path.resolve(__dirname, "../../", ".env") });
 
+// AIモデルを取得する関数
 export const getModel = (
   provider: string,
   name: string | null,

@@ -2,7 +2,10 @@
 import { file, write } from "bun";
 import { isSafePath } from "../utils/pathUtils";
 
-export const writeFileTool = async (filename: string, content: string): Promise<any> => {
+export const writeFileTool = async (
+  filename: string,
+  content: string,
+): Promise<any> => {
   if (!isSafePath(filename)) {
     return {
       type: "error",
@@ -12,7 +15,7 @@ export const writeFileTool = async (filename: string, content: string): Promise<
 
   try {
     const target_file = file(filename);
-    const writer = target_file.writer({ highWaterMark: 1024 * 1024 });
+    const writer = target_file.writer({ highWaterMark: 1024 * 1024 }); // 1MB
 
     writer.write(content);
     await writer.end();

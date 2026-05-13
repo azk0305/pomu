@@ -1,4 +1,4 @@
-// ファイル本文の読み込み（行指定・行番号付き・1000行制限）
+// ファイル本文を読み込み（行指定・行番号付き・1000行制限）
 import { file } from "bun";
 
 const MAX_LINES = 1000;
@@ -7,11 +7,12 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 export const readFileTool = async (
   filename: string = "notfound.txt",
   startLine: number = 1,
-  endLine?: number
+  endLine?: number,
 ): Promise<any> => {
   const content = file(filename);
   const isFileExists = await content.exists();
 
+  // ファイルが存在するか確認
   if (!isFileExists) {
     return {
       type: "error",
@@ -72,5 +73,7 @@ if (process.argv[1] === __filename) {
   const filename = process.argv[2] ?? "notfound.txt";
   const start = process.argv[3] ? parseInt(process.argv[3]) : 1;
   const end = process.argv[4] ? parseInt(process.argv[4]) : undefined;
-  console.log(JSON.stringify(await readFileTool(filename, start, end), null, 2));
+  console.log(
+    JSON.stringify(await readFileTool(filename, start, end), null, 2),
+  );
 }

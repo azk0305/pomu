@@ -3,6 +3,7 @@ import { model } from "../config/model";
 import { tools } from "../tools";
 import { SYSTEM_PROMPT } from "../config/systemPrompt";
 
+// Headlessモードを実行
 export async function runHeadless(prompt: string) {
   const result = streamText({
     ...model,
@@ -19,8 +20,8 @@ export async function runHeadless(prompt: string) {
         process.stdout.write(part.text);
         break;
       case "reasoning-delta":
-        // Reasoning can be printed or hidden; let's print it in a dim style if possible
-        // but for now, just skip or print as is.
+        // Reasoningの表示の実装については後日検討（DIMスタイルでの表示など）するため一旦非表示
+        // 下記は表示する場合の一例
         // process.stdout.write(part.text);
         break;
       case "tool-call":

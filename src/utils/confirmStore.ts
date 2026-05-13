@@ -1,10 +1,12 @@
 import * as readline from "node:readline/promises";
 
+// 確認リクエストの型定義
 type ConfirmRequest = {
   message: string;
   resolve: (value: boolean) => void;
 };
 
+// 確認リクエスト管理クラス
 class ConfirmStore {
   private currentRequest: ConfirmRequest | null = null;
   private listeners: Set<() => void> = new Set();
@@ -20,7 +22,7 @@ class ConfirmStore {
   }
 
   /**
-   * Subscribes to changes in the store.
+   * ストアの変更内容を通知する
    */
   subscribe(listener: () => void) {
     this.listeners.add(listener);
@@ -28,15 +30,16 @@ class ConfirmStore {
   }
 
   /**
-   * Returns the current confirmation request, if any.
+   * 現在の確認リクエストを返す
    */
   getSnapshot() {
     return this.currentRequest;
   }
 
   /**
-   * Asks the user for confirmation.
-   * Returns a promise that resolves to true (confirmed) or false (cancelled).
+   * 確認内容をユーザーに提示する
+   * ユーザーの入力を待つ
+   * 既存のリクエストがある場合は新しいリクエストを拒否する
    */
   async ask(message: string): Promise<boolean> {
     if (this.isYolo) {
@@ -57,8 +60,7 @@ class ConfirmStore {
       }
     }
 
-    // If a request is already active, we reject the new one or queue it.
-    // For simplicity, we just reject if another one is pending.
+    // 既存のリクエストがある場合は新しいリクエストを拒否する
     if (this.currentRequest) {
       return Promise.resolve(false);
     }
@@ -76,6 +78,7 @@ class ConfirmStore {
     });
   }
 
+  // ストアの変更内容を通知する
   private notify() {
     for (const listener of this.listeners) {
       listener();

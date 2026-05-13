@@ -1,6 +1,7 @@
 import type { Command } from "./types";
 import type { Message } from "../types/Message";
 
+// Helpコマンドの実装
 export const helpCommand: Command = {
   name: "help",
   description: "Show available commands",

@@ -1,15 +1,17 @@
 import { getModel } from "../providers";
 
 /**
- * AI Model Configuration
- * 
- * You can customize the model and its options here.
- * This file is ignored by Git, so you can change it freely.
+ * AIモデルの設定
+ *
+ * getModel(プロバイダ名, モデル名, モデルID, オプション)
+ * Vercel AI SDKを利用しているため各項目の内容もAI SDKに準拠
+ *
+ * なおこのファイルはGitの管理外にしているため、自由に変更可能
  */
 
 // Example for Google Gemini
-export const model = getModel("google", null, "gemma-2-9b-it", {
-  maxOutputTokens: 8192,
+export const model = getModel("google", null, "gemma-4-31b-it", {
+  maxOutputTokens: 65536,
   temperature: 1.0,
   topP: 0.95,
   topK: 64,

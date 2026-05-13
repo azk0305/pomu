@@ -1,3 +1,4 @@
+// メッセージの型定義
 export type Role = "user" | "assistant" | "tool";
 
 export interface BaseMessage {

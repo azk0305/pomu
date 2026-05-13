@@ -1,9 +1,9 @@
 import { useSyncExternalStore, useRef } from "react";
 import { confirmStore } from "../utils/confirmStore";
-import { bold, TextAttributes, type TextareaRenderable } from "@opentui/core";
+import { TextAttributes, type TextareaRenderable } from "@opentui/core";
 
 /**
- * A dialog overlay that asks the user for confirmation (Y/n).
+ * ユーザにY/nでの確認を求めるダイアログのオーバーレイ
  */
 export const ConfirmDialog = () => {
   const request = useSyncExternalStore(

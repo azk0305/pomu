@@ -1,6 +1,7 @@
 import type React from "react";
 import type { Message } from "../types/Message";
 
+// コマンドのコンテキストとインターフェイス
 export interface CommandContext {
   messagesRef: React.RefObject<Message[]>;
   setMessages: (messages: (prev: Message[]) => Message[]) => void;

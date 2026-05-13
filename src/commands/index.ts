@@ -6,6 +6,7 @@ import { claudeCommand } from "./claude";
 import { geminiCommand } from "./gemini";
 import { testConfirmCommand } from "./testConfirm";
 
+// コマンドの登録と処理
 export const commands: Command[] = [
   exitCommand,
   helpCommand,
@@ -17,7 +18,7 @@ export const commands: Command[] = [
 
 export async function handleCommand(
   input: string,
-  context: Omit<CommandContext, "commands">
+  context: Omit<CommandContext, "commands">,
 ): Promise<boolean> {
   const parts = input.trim().split(/\s+/);
   const commandName = parts[0]?.slice(1).toLowerCase();

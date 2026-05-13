@@ -1,8 +1,11 @@
-// 任意のコマンド実行（spawn）
+// spawnを使って任意のコマンドを実行
 import { spawn } from "bun";
 
-export const runCommandTool = async (command: string, args: string[]): Promise<any> => {
-  const run_command = [command, ...args]
+export const runCommandTool = async (
+  command: string,
+  args: string[],
+): Promise<any> => {
+  const run_command = [command, ...args];
 
   const proc = spawn(run_command);
 
@@ -22,7 +25,7 @@ export const runCommandTool = async (command: string, args: string[]): Promise<a
       value: `Command failed with exit code ${exitCode}:\n${errorOutput}`,
     };
   }
-}
+};
 
 if (process.argv[1] === __filename) {
   const command = process.argv[2] ?? "";

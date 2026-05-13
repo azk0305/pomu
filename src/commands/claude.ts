@@ -2,6 +2,7 @@ import type { Command } from "./types";
 import { spawn } from "bun";
 import type { Message } from "../types/Message";
 
+// Claudeコマンドの実装
 export const claudeCommand: Command = {
   name: "claude",
   description: "Delegate a command to Claude",
@@ -32,11 +33,20 @@ export const claudeCommand: Command = {
     });
 
     // Claudeにdelegate
-    const proc = spawn(["claude", "--permission-mode", "bypassPermissions", "-p", args.join(" ")], {
-      cwd: process.cwd(),
-      stdout: "pipe",
-      stderr: "pipe",
-    });
+    const proc = spawn(
+      [
+        "claude",
+        "--permission-mode",
+        "bypassPermissions",
+        "-p",
+        args.join(" "),
+      ],
+      {
+        cwd: process.cwd(),
+        stdout: "pipe",
+        stderr: "pipe",
+      },
+    );
     const text = await proc.stdout.text();
 
     // Assistant Messageを表示

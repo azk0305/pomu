@@ -2,6 +2,7 @@ import type { Command } from "./types";
 import { spawn } from "bun";
 import type { Message } from "../types/Message";
 
+// Geminiコマンドの実装
 export const geminiCommand: Command = {
   name: "gemini",
   description: "Delegate a command to Gemini",

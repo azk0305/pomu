@@ -6,6 +6,7 @@ import type {
   ToolMessage,
 } from "./types/Message";
 
+// ユーザーのメッセージのView
 const UserMessageView = ({ message }: { message: UserMessage }) => (
   <box>
     <text margin={1} fg={"lime"}>
@@ -14,6 +15,7 @@ const UserMessageView = ({ message }: { message: UserMessage }) => (
   </box>
 );
 
+// LLM（Assistant）のメッセージのView
 const AssistantMessageView = ({ message }: { message: AssistantMessage }) => (
   <box>
     <text marginX={1} marginTop={1} fg={"white"}>
@@ -48,6 +50,7 @@ const AssistantMessageView = ({ message }: { message: AssistantMessage }) => (
   </box>
 );
 
+// Toolに関するメッセージのView
 const ToolMessageView = ({ message }: { message: ToolMessage }) => (
   <box>
     {message.content.map((tool, index) => (
@@ -58,6 +61,7 @@ const ToolMessageView = ({ message }: { message: ToolMessage }) => (
   </box>
 );
 
+// メッセージ全体のView
 export const Messages = ({ chatMessages }: { chatMessages: Message[] }) => {
   return (
     <box>

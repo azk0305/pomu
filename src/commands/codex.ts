@@ -2,6 +2,7 @@ import type { Command } from "./types";
 import { spawn } from "bun";
 import type { Message } from "../types/Message";
 
+// Codexコマンドの実装
 export const codexCommand: Command = {
   name: "codex",
   description: "Delegate a command to Codex",

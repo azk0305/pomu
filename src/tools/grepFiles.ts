@@ -4,10 +4,11 @@ import { spawn } from "bun";
 export const grepFilesTool = async (
   keyword: string,
   dir: string = ".",
-  glob?: string
+  glob?: string,
 ): Promise<any> => {
   const args = ["rg", "-n", "--no-heading", "--with-filename"];
 
+  // グロブのパターンを追加
   if (glob) {
     args.push("-g", glob);
   }

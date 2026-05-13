@@ -4,6 +4,7 @@ import type { Message } from "./types/Message";
 import { sendMessage } from "./actions/sendMessage";
 import { handleCommand } from "./commands";
 
+// 画面下部に表示するUserメッセージ用のテキストエリア
 export const Footer = ({
   messagesRef,
   setMessages,

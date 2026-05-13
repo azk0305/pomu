@@ -1,3 +1,5 @@
+// AIアシスタントのシステムプロンプト設定
+// 'pomu'エージェントハーネス内で動作する際の役割、目標、行動指針を定義
 export const SYSTEM_PROMPT = `# Role
 
 You are a helpful assistant operating inside 'pomu', an agent harness. You help the user by reading files, executing commands, editing files, and writing new files.

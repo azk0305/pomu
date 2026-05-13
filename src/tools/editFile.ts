@@ -7,6 +7,7 @@ export const editFileTool = async (
   old_string: string,
   new_string: string,
 ): Promise<any> => {
+  // コマンドの実行が可能な場所か確認
   if (!isSafePath(filename)) {
     return {
       type: "error",
@@ -15,6 +16,7 @@ export const editFileTool = async (
   }
 
   try {
+    // ファイルを読み込み
     const target_file = file(filename);
     const exists = await target_file.exists();
     if (!exists) {
