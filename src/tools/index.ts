@@ -9,6 +9,7 @@ import { makeDirTool } from "./makeDir";
 import { writeFileTool } from "./writeFile";
 import { editFileTool } from "./editFile";
 import { runCommandTool } from "./runCommand";
+import { invokeAgentTool } from "./invokeAgent";
 
 // AIツールの集合
 export const tools = {
@@ -158,6 +159,31 @@ export const tools = {
         return { type: "text", value: "Command execution cancelled by user." };
       }
       return runCommandTool(command, args);
+    },
+  }),
+  invoke_agent: tool({
+    description:
+      "Delegate a task to a specialized sub-agent (gemini, claude, codex, or pomu). The sub-agent runs in a separate process.",
+    inputSchema: z.object({
+      agent_name: z
+        .string()
+        .describe("The name of the agent to invoke (e.g., 'gemini', 'pomu')"),
+      prompt: z.string().describe("The prompt or task to delegate"),
+    }),
+    execute: async ({
+      agent_name,
+      prompt,
+    }: {
+      agent_name: string;
+      prompt: string;
+    }) => {
+      const confirmed = await confirmStore.ask(
+        `Invoke sub-agent: ${agent_name}?`,
+      );
+      if (!confirmed) {
+        return { type: "text", value: "Agent invocation cancelled by user." };
+      }
+      return invokeAgentTool(agent_name, prompt);
     },
   }),
 };

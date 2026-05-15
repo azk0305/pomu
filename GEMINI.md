@@ -24,6 +24,18 @@ A Terminal User Interface (TUI) chat application built with React and OpenTUI, l
     - `confirmStore.ts`: Global state for tool execution confirmations and mode flags.
     - `pathUtils.ts`: Security utilities for file path validation.
 
+## Orchestration & Sub-Agents
+
+Pomu is designed as an **Orchestrator**. It can delegate tasks to specialized sub-agents using the `invoke_agent` tool.
+
+- **Supported Sub-Agents:**
+  - `gemini`: Google Gemini CLI.
+  - `claude`: Claude Code.
+  - `codex`: Codex CLI.
+  - `pomu`: Self-delegation via headless mode.
+- **Execution Mechanism:** Sub-agents are spawned in separate processes with their respective non-interactive/auto-approve flags (e.g., `--yolo`, `--permission-mode bypassPermissions`).
+- **Safety:** Parent `pomu` instance will ask for user confirmation before invoking a sub-agent unless the parent is also in YOLO mode.
+
 ## Building and Running
 
 ### Prerequisites

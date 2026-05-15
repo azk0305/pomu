@@ -12,9 +12,12 @@ Pomuはターミナル（TUI）型のチャットアプリケーションです�
   - デフォルトで利用可能：Google（Gemini）、OpenAI互換API
   - Vercel AI SDKのモジュールを追加することで多くのLLMを利用可能
 - TUIでのチャット：OpenTUIを使って、モダンで対話的なターミナルUXを構築
+- オーケストレーション（Sub-Agents）：
+  - AIが自律的に判断し、複雑なタスクを他の専門エージェント（gemini, claude, codex, あるいはpomu自身）へ委譲可能
+  - `invoke_agent` ツールによる安全なバックグラウンド実行
 - ツール呼び出し：
   - ファイル処理：`read_file`, `write_file`, `edit_file`, `list_files`, `grep_files`（要ripgrep）, `make_dir`
-  - システム処理：`run_command`, `get_current_time`
+  - システム処理：`run_command`, `get_current_time`, `invoke_agent`
 - スラッシュコマンド：
   - Gemini CLIへの委譲（`/gemini`）
   - Claudeへの委譲（`/claude`）
