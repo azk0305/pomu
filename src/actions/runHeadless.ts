@@ -2,13 +2,17 @@ import { streamText, stepCountIs } from "ai";
 import { model } from "../config/model";
 import { tools } from "../tools";
 import { SYSTEM_PROMPT } from "../config/systemPrompt";
+import { getDynamicSystemPrompt } from "../utils/skillManager";
 
 // Headlessモードを実行
 export async function runHeadless(prompt: string) {
+  const initialMessages = [
+    { id: crypto.randomUUID(), role: "user" as const, content: prompt },
+  ];
   const result = streamText({
     ...model,
-    system: SYSTEM_PROMPT,
-    messages: [{ role: "user", content: prompt }],
+    system: getDynamicSystemPrompt(SYSTEM_PROMPT, initialMessages),
+    messages: initialMessages,
     providerOptions: model.providerOptions,
     stopWhen: stepCountIs(10),
     tools,

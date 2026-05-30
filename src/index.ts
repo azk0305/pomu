@@ -3,7 +3,9 @@ import { App } from "./app";
 import { createCliRenderer, ConsolePosition } from "@opentui/core";
 import { createRoot } from "@opentui/react";
 import { createElement } from "react";
-// import { mkdir } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { mkdir } from "node:fs/promises";
 import { runHeadless } from "./actions/runHeadless";
 import { confirmStore } from "./utils/confirmStore";
 
@@ -22,7 +24,7 @@ program
   )
   .action(async (options) => {
     // ~/.pomu を作成
-    // mkdir("~/.pomu", { recursive: true });
+    mkdir(path.resolve(os.homedir(), ".pomu"), { recursive: true });
 
     // YOLOモードを実行
     if (options.yolo) {

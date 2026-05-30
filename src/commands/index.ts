@@ -5,6 +5,7 @@ import { codexCommand } from "./codex";
 import { claudeCommand } from "./claude";
 import { geminiCommand } from "./gemini";
 import { testConfirmCommand } from "./testConfirm";
+import { skillsCommand } from "./skills";
 
 // コマンドの登録と処理
 export const commands: Command[] = [
@@ -14,6 +15,7 @@ export const commands: Command[] = [
   claudeCommand,
   geminiCommand,
   testConfirmCommand,
+  skillsCommand,
 ];
 
 export async function handleCommand(

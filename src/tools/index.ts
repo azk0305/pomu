@@ -10,6 +10,8 @@ import { writeFileTool } from "./writeFile";
 import { editFileTool } from "./editFile";
 import { runCommandTool } from "./runCommand";
 import { invokeAgentTool } from "./invokeAgent";
+import { activateSkillTool } from "./activateSkill";
+
 
 // AIツールの集合
 export const tools = {
@@ -184,6 +186,18 @@ export const tools = {
         return { type: "text", value: "Agent invocation cancelled by user." };
       }
       return invokeAgentTool(agent_name, prompt);
+    },
+  }),
+  activate_skill: tool({
+    description:
+      "Activate an available skill to load its instructions/rules into the session. Use this tool if the skill is relevant to the task.",
+    inputSchema: z.object({
+      name: z
+        .string()
+        .describe("The name of the skill to activate (e.g., 'git-helper')"),
+    }),
+    execute: async ({ name }: { name: string }) => {
+      return activateSkillTool(name);
     },
   }),
 };

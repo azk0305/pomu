@@ -4,6 +4,7 @@ import { model } from "../config/model";
 import { streamText, type ModelMessage, stepCountIs } from "ai";
 import { tools } from "../tools";
 import { SYSTEM_PROMPT } from "../config/systemPrompt";
+import { getDynamicSystemPrompt } from "../utils/skillManager";
 
 interface SendMessageOptions {
   userContent: string;
@@ -25,15 +26,19 @@ export async function sendMessage({
     content: userContent,
   };
 
+  // messagesRef.current を同期的に更新し、ステートを更新する準備
+  const currentMessages = messagesRef.current ?? [];
+  const updatedMessages = [...currentMessages, userMessage];
+
+  if (messagesRef) {
+    (messagesRef as any).current = updatedMessages;
+  }
+
   // ユーザーメッセージをメッセージリストに追加して画面へ表示
-  setMessages((prev) => {
-    const next = [...prev, userMessage];
-    if (messagesRef.current) messagesRef.current = next;
-    return next;
-  });
+  setMessages(() => updatedMessages);
 
   // プロンプトの整形 (CoreMessage形式に変換)
-  const prompts: ModelMessage[] = (messagesRef.current ?? []).map((msg) => {
+  const prompts: ModelMessage[] = updatedMessages.map((msg) => {
     switch (msg.role) {
       case "user":
         return { role: "user", content: msg.content };
@@ -81,7 +86,7 @@ export async function sendMessage({
   // AIモデルを呼び出してメッセージを受け取る
   const result = streamText({
     ...model,
-    system: SYSTEM_PROMPT,
+    system: getDynamicSystemPrompt(SYSTEM_PROMPT, updatedMessages),
     messages: prompts,
     providerOptions: model.providerOptions,
     stopWhen: stepCountIs(10),
