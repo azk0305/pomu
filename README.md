@@ -17,13 +17,14 @@ Pomuはターミナル（TUI）型のチャットアプリケーションです�
   - `invoke_agent` ツールによる安全なバックグラウンド実行
 - ツール呼び出し：
   - ファイル処理：`read_file`, `write_file`, `edit_file`, `list_files`, `grep_files`（要ripgrep）, `make_dir`
-  - システム処理：`run_command`, `get_current_time`, `invoke_agent`
+  - システム処理：`run_command`, `get_current_time`, `invoke_agent`, `activate_skill`
 - スラッシュコマンド：
   - Gemini CLIへの委譲（`/gemini`）
   - Claudeへの委譲（`/claude`）
   - Codexへの委譲（`/codex`）
   - ヘルプの表示（`/help`）
   - アプリケーションの終了（`/exit`）
+  - スキル一覧の表示（`/skills`）
 - セキュリティ：特定のツールの呼び出しにはユーザへ確認を求める、カレントディレクトリの外部の操作は禁止にする
 
 ## Getting Started
@@ -66,6 +67,35 @@ bun run src/index.ts
 ## Usage
 
 起動後、画面下部のテキストエリアからプロンプトを送信する。
+
+## Agent Skills (エージェント・スキル)
+
+セッション中に、特定のドメインやプロジェクトに合わせた指示・ルール（スキル）を動的にLLMに読み込ませることができます。
+
+### スキルの定義
+
+以下のようにYAMLフロントマター（`name` と `description`）を含むMarkdownファイルを配置します。プロジェクトレベルとグローバル（ユーザレベル）の2箇所に配置可能で、同じ名前のスキルが存在する場合はプロジェクトレベルが優先されます。
+
+- **グローバル（ユーザレベル）:** `~/.pomu/skills/<skill-name>/SKILL.md`
+- **プロジェクトレベル:** `./.pomu/skills/<skill-name>/SKILL.md`
+
+**SKILL.mdの記述例:**
+```markdown
+---
+name: git-helper
+description: Gitコミットメッセージやブランチ管理のベストプラクティス
+---
+# Git Helper Skill
+常にConventional Commitsに従ってクリーンなコミットメッセージを作成してください。
+...
+```
+
+### スキルの動作
+
+1. **検出:** 起動時に配置されたスキルを自動的にスキャンします（scanSkills）。
+2. **提示:** 利用可能なスキル一覧（名前と説明）がシステムプロンプトの「Available Skills」としてLLMに提示されます。
+3. **有効化:** LLMが必要だと判断したタイミングで activate_skill ツールを実行し、そのスキルの内容を「Active Skills」としてセッション内のシステムプロンプトへ動的に挿入します。
+4. **コマンド:** `/skills` スラッシュコマンド（src/commands/skills.ts）を実行することで、現在ロードされているスキルのステータス（Active / Inactive）やパスの一覧を確認できます。
 
 ## Others
 

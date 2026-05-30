@@ -15,7 +15,7 @@ A Terminal User Interface (TUI) chat application built with React and OpenTUI, l
   - `src/actions/`:
     - `sendMessage.ts`: Logic for streaming AI responses in TUI mode.
     - `runHeadless.ts`: Logic for headless mode (CLI-only interaction).
-  - `src/commands/`: Implementation of slash commands (e.g., `/gemini`, `/claude`).
+  - `src/commands/`: Implementation of slash commands (e.g., `/gemini`, `/claude`, `/skills`).
   - `src/tools/`: Definitions for AI-invocable tools.
   - `src/components/`: Reusable UI components (e.g., `ConfirmDialog`).
   - `src/providers/`: Factory for AI model instances and provider configurations.
@@ -23,6 +23,7 @@ A Terminal User Interface (TUI) chat application built with React and OpenTUI, l
   - `src/utils/`:
     - `confirmStore.ts`: Global state for tool execution confirmations and mode flags.
     - `pathUtils.ts`: Security utilities for file path validation.
+    - `skillManager.ts`: Utility for scanning, loading, and building system prompts for Agent Skills.
 
 ## Orchestration & Sub-Agents
 
@@ -35,6 +36,36 @@ Pomu is designed as an **Orchestrator**. It can delegate tasks to specialized su
   - `pomu`: Self-delegation via headless mode.
 - **Execution Mechanism:** Sub-agents are spawned in separate processes with their respective non-interactive/auto-approve flags (e.g., `--yolo`, `--permission-mode bypassPermissions`).
 - **Safety:** Parent `pomu` instance will ask for user confirmation before invoking a sub-agent unless the parent is also in YOLO mode.
+
+## Agent Skills
+
+Pomu supports **Agent Skills**, allowing the assistant to dynamically load domain-specific or project-specific instructions and rules into the session.
+
+- **Storage Locations:**
+  - **User-level (Global) Skills:** `~/.pomu/skills/<skill-name>/SKILL.md`
+  - **Project-level Skills:** `./.pomu/skills/<skill-name>/SKILL.md`
+  - *Note:* If a project-level skill has the same name as a user-level skill, the project-level skill takes precedence.
+
+- **Defining a Skill (`SKILL.md`):**
+  A skill must be a markdown file with YAML frontmatter containing `name` and `description`:
+  ```markdown
+  ---
+  name: git-helper
+  description: Best practices for git commits and branch management
+  ---
+  # Git Helper Skill
+  Always write clean, conventional commit messages.
+  ...
+  ```
+
+- **How it Works:**
+  1. **Scans Available Skills:** During startup, Pomu scans the user-level and project-level directories using scanSkills.
+  2. **Catalog Injection:** The available skill catalog (names and descriptions) is dynamically appended to the base system prompt.
+  3. **Activation Tool (`activate_skill`):** When the assistant encounters a task where an available skill is relevant, it invokes the `activate_skill` tool (defined in src/tools/index.ts) with the skill name.
+  4. **Active Prompt Injection:** Once activated, the full instructions from the skill are injected into the dynamic system prompt for all subsequent turns in that session.
+
+- **Slash Command:**
+  - `/skills`: Lists all scanned skills, showing their activation status (Active/Inactive), description, and location. Implemented in src/commands/skills.ts.
 
 ## Building and Running
 
