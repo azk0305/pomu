@@ -56,7 +56,7 @@ Pomuはターミナル（TUI）型のチャットアプリケーションです�
 
 2. `.env` を編集してAPIキーなどを追加：
    - `GOOGLE_GENERATIVE_AI_API_KEY`: Google AI Studioで取得
-   - `OPENAI_BASE_URL` および `OPENAI_API_KEY` (OpenAI互換プロバイダの場合：必要に応じて)
+   - `OPENAI_API_BASE_URL` および `OPENAI_API_KEY` (OpenAI互換プロバイダの場合：必要に応じて)
 
 ### Running
 
