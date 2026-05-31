@@ -32,11 +32,14 @@ export const geminiCommand: Command = {
       return next;
     });
 
-    // Geminiにdelegate
-    const proc = spawn(["gemini", "--yolo", "-p", args.join(" ")], {
+    // Gemini(Antigravity)にdelegate
+    const proc = spawn({
+      cmd: ["agy", "--dangerously-skip-permissions", "-p", args.join(" ")],
       cwd: process.cwd(),
+      stdin: "ignore",
       stdout: "pipe",
       stderr: "pipe",
+      detached: true,
     });
     const text = await proc.stdout.text();
 

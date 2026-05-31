@@ -19,15 +19,21 @@ export const invokeAgentTool = async (
       break;
     case "claude":
       // Claude Code uses --permission-mode bypassPermissions for automation
-      command = ["claude", "--permission-mode", "bypassPermissions", "-p", prompt];
+      command = [
+        "claude",
+        "--permission-mode",
+        "bypassPermissions",
+        "-p",
+        prompt,
+      ];
       break;
     case "codex":
       // Codex uses 'exec' subcommand and --yolo
       command = ["codex", "exec", "--yolo", prompt];
       break;
     case "gemini":
-      // Gemini CLI uses --yolo and -p
-      command = ["gemini", "--yolo", "-p", prompt];
+      // Antigravity CLI uses --dangerously-skip-permissions and -p
+      command = ["agy", "--dangerously-skip-permissions", "-p", prompt];
       break;
     default:
       // Default fallback (trying to be generic)
@@ -35,7 +41,12 @@ export const invokeAgentTool = async (
       break;
   }
 
-  const proc = spawn(command);
+  const proc = spawn(command, {
+    stdin: "ignore",
+    stdout: "pipe",
+    stderr: "pipe",
+    detached: true,
+  });
 
   const stdout = await new Response(proc.stdout).text();
   const stderr = await new Response(proc.stderr).text();

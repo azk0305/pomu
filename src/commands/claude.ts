@@ -33,20 +33,20 @@ export const claudeCommand: Command = {
     });
 
     // Claudeにdelegate
-    const proc = spawn(
-      [
+    const proc = spawn({
+      cmd: [
         "claude",
         "--permission-mode",
         "bypassPermissions",
         "-p",
         args.join(" "),
       ],
-      {
-        cwd: process.cwd(),
-        stdout: "pipe",
-        stderr: "pipe",
-      },
-    );
+      cwd: process.cwd(),
+      stdin: "ignore",
+      stdout: "pipe",
+      stderr: "pipe",
+      detached: true,
+    });
     const text = await proc.stdout.text();
 
     // Assistant Messageを表示

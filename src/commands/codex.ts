@@ -33,10 +33,13 @@ export const codexCommand: Command = {
     });
 
     // Codexにdelegate
-    const proc = spawn(["codex", "exec", "--yolo", args.join(" ")], {
+    const proc = spawn({
+      cmd: ["codex", "exec", "--yolo", args.join(" ")],
       cwd: process.cwd(),
+      stdin: "ignore",
       stdout: "pipe",
       stderr: "pipe",
+      detached: true,
     });
     const text = await proc.stdout.text();
 
