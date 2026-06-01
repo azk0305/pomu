@@ -12,6 +12,8 @@ Pomuはターミナル（TUI）型のチャットアプリケーションです�
   - デフォルトで利用可能：Google（Gemini）、OpenAI互換API
   - Vercel AI SDKのモジュールを追加することで多くのLLMを利用可能
 - TUIでのチャット：OpenTUIを使って、モダンで対話的なターミナルUXを構築
+- LLMの評価とトレース（W&B Weave）：
+  - `USE_WEAVE` を有効にすることで、LLMとのやり取りやツール呼び出しのトレースを Weights & Biases Weave に送信してログ出力・評価が可能
 - オーケストレーション（Sub-Agents）：
   - AIが自律的に判断し、複雑なタスクを他の専門エージェント（gemini, claude, codex, あるいはpomu自身）へ委譲可能
   - `invoke_agent` ツールによる安全なバックグラウンド実行
@@ -57,6 +59,11 @@ Pomuはターミナル（TUI）型のチャットアプリケーションです�
 2. `.env` を編集してAPIキーなどを追加：
    - `GOOGLE_GENERATIVE_AI_API_KEY`: Google AI Studioで取得
    - `OPENAI_API_BASE_URL` および `OPENAI_API_KEY` (OpenAI互換プロバイダの場合：必要に応じて)
+   - **W&B Weave連携（任意）：**
+     - `USE_WEAVE`: `"true"` に設定してトレースを有効化
+     - `WANDB_API_KEY`: Weights & BiasesのAPIキー
+     - `WANDB_PROJECT_NAME`: トレースの送信先W&Bプロジェクト名
+     - `WANDB_TEAM_NAME`: トレースの送信先W&Bチーム（エンティティ）名
 
 ### Running
 

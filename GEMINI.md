@@ -67,6 +67,31 @@ Pomu supports **Agent Skills**, allowing the assistant to dynamically load domai
 - **Slash Command:**
   - `/skills`: Lists all scanned skills, showing their activation status (Active/Inactive), description, and location. Implemented in src/commands/skills.ts.
 
+## LLM Tracing & Evaluation (W&B Weave)
+
+Pomu supports integration with **Weights & Biases Weave** for LLM application tracking, evaluation, and observability.
+
+- **Telemetry Architecture:**
+  - Integrates with the Vercel AI SDK's `experimental_telemetry` option.
+  - Registers a global platform-agnostic `BasicTracerProvider` and `SimpleSpanProcessor` from `@opentelemetry/sdk-trace-base` to prevent runtime conflicts with Bun's interactive terminal raw mode event loop (avoiding `AsyncHooksContextManager` monkey-patching).
+  - Traces are exported using `@opentelemetry/exporter-trace-otlp-proto` to W&B's OTLP endpoint (`https://trace.wandb.ai/otel/v1/traces`).
+- **Configuration (`.env`):**
+  - `USE_WEAVE`: Enables/disables tracing when set to `"true"`.
+  - `WANDB_API_KEY`: API key for Weights & Biases authorization.
+  - `WANDB_PROJECT_NAME`: Target W&B project.
+  - `WANDB_TEAM_NAME`: Target W&B team/entity.
+- **Development Constraints:**
+  - For tool-call tracking compatibility across both Weave and Vercel AI SDK v6, the message formatting mapper in `src/actions/sendMessage.ts` maps tool result parts using **both** `result` (required by Weave) and `output` structured value (required by AI SDK v6 zod validation):
+    ```typescript
+    {
+      type: "tool-result",
+      toolCallId: c.toolCallId,
+      toolName: c.toolName,
+      result: c.output,
+      output: { type: "text", value: String(c.output) }
+    }
+    ```
+
 ## Building and Running
 
 ### Prerequisites
