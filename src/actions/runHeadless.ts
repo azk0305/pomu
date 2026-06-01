@@ -15,6 +15,7 @@ export async function runHeadless(prompt: string) {
     messages: initialMessages,
     providerOptions: model.providerOptions,
     stopWhen: stepCountIs(10),
+    experimental_telemetry: { isEnabled: true },
     tools,
   });
 

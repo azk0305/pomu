@@ -10,6 +10,18 @@ import { trace } from "@opentelemetry/api";
 // 環境変数（.env）の読み込み
 dotenv.config({ path: path.resolve(__dirname, "../../", ".env") });
 
+let activeProvider: BasicTracerProvider | null = null;
+
+export async function shutdownTelemetry() {
+  if (activeProvider) {
+    try {
+      await activeProvider.shutdown();
+    } catch (e) {
+      console.error("Failed to shutdown telemetry provider:", e);
+    }
+  }
+}
+
 // AIモデルを取得する関数
 export const getModel = (
   provider: string,
@@ -23,7 +35,7 @@ export const getModel = (
   const WANDB_TEAM_NAME: string = process.env.WANDB_TEAM_NAME!;
 
   // W&B Weave
-  if (USE_WEAVE === "true") {
+  if (USE_WEAVE === "true" && !activeProvider) {
     const exporter = new OTLPTraceExporter({
       url: "https://trace.wandb.ai/otel/v1/traces",
       headers: {
@@ -40,6 +52,7 @@ export const getModel = (
     });
 
     trace.setGlobalTracerProvider(wandbProvider);
+    activeProvider = wandbProvider;
   }
 
   // LLM Provider

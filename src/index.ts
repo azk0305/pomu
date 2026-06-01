@@ -8,6 +8,7 @@ import path from "node:path";
 import { mkdir } from "node:fs/promises";
 import { runHeadless } from "./actions/runHeadless";
 import { confirmStore } from "./utils/confirmStore";
+import { shutdownTelemetry } from "./providers";
 
 // 起動処理
 function main() {
@@ -39,6 +40,7 @@ function main() {
       if (options.prompt) {
         confirmStore.setHeadlessMode(true);
         await runHeadless(options.prompt);
+        await shutdownTelemetry();
         process.stdin.pause();
         process.exit(0);
       }
@@ -58,7 +60,12 @@ function main() {
       // レンダリングを実施
       //renderer.console.toggle();
       createRoot(renderer).render(
-        createElement(App, { onExit: () => renderer.destroy() }),
+        createElement(App, {
+          onExit: async () => {
+            await shutdownTelemetry();
+            renderer.destroy();
+          },
+        }),
       );
     });
   program.parse();

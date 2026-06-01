@@ -75,6 +75,7 @@ Pomu supports integration with **Weights & Biases Weave** for LLM application tr
   - Integrates with the Vercel AI SDK's `experimental_telemetry` option.
   - Registers a global platform-agnostic `BasicTracerProvider` and `SimpleSpanProcessor` from `@opentelemetry/sdk-trace-base` to prevent runtime conflicts with Bun's interactive terminal raw mode event loop (avoiding `AsyncHooksContextManager` monkey-patching).
   - Traces are exported using `@opentelemetry/exporter-trace-otlp-proto` to W&B's OTLP endpoint (`https://trace.wandb.ai/otel/v1/traces`).
+  - Exports `shutdownTelemetry` from `src/providers/index.ts`, which is awaited before process exit (in headless mode) or renderer destruction (in TUI mode) to guarantee that all queued spans are fully flushed and sent to Weave.
 - **Configuration (`.env`):**
   - `USE_WEAVE`: Enables/disables tracing when set to `"true"`.
   - `WANDB_API_KEY`: API key for Weights & Biases authorization.
