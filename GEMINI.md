@@ -6,7 +6,7 @@ A Terminal User Interface (TUI) chat application built with React and OpenTUI, l
 
 - **Core Framework:** React 19 with OpenTUI for terminal rendering.
 - **Runtime & Package Manager:** [Bun](https://bun.sh/).
-- **AI Integration:** Uses `ai` (Vercel AI SDK) with `@ai-sdk/google` (Google Gemini), `@ai-sdk/anthropic` (Claude), and `@ai-sdk/openai-compatible` (e.g., LM Studio).
+- **AI Integration:** Uses `ai` (Vercel AI SDK) with `@ai-sdk/google` (Google Gemini) and `@ai-sdk/openai-compatible` (e.g., LM Studio).
 - **Architecture:**
   - `src/index.ts`: Entry point, CLI flag handling, and main layout.
   - `src/app.tsx`: Main application component for TUI mode.
@@ -92,6 +92,10 @@ Pomu supports integration with **Weights & Biases Weave** for LLM application tr
       output: { type: "text", value: String(c.output) }
     }
     ```
+  - **Tool-Result Consistency Mandate (Weave Error Prevention):**
+    To prevent Weave from throwing `Exception: Tool result is missing for tool call` errors when tool execution fails or is interrupted:
+    - All tool execution functions in `src/tools/index.ts` are wrapped with a `safeExecute` helper. This helper catches any runtime exceptions and returns a structured error result (`{ type: "error", value: "..." }`) rather than letting the exception bubble up, which would skip the `tool-result` generation.
+    - In `src/actions/sendMessage.ts`, prior to compiling prompt history for the LLM, the messages array is normalized. Any `tool-call` in the assistant messages that lacks a matching `tool-result` in the tool messages is automatically patched with a dummy error result, ensuring strict alignment between tool calls and their results.
 
 ## Building and Running
 

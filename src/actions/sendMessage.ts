@@ -1,5 +1,5 @@
 import type React from "react";
-import type { Message, AssistantMessage } from "../types/Message";
+import type { Message, AssistantMessage, ToolMessage } from "../types/Message";
 import { model } from "../config/model";
 import { streamText, type ModelMessage, stepCountIs } from "ai";
 import { tools } from "../tools";
@@ -37,8 +37,89 @@ export async function sendMessage({
   // ユーザーメッセージをメッセージリストに追加して画面へ表示
   setMessages(() => updatedMessages);
 
+  // --- メッセージ履歴の不整合（tool-callに対するtool-resultの欠落）を検出して補正 ---
+  // すべての tool メッセージから toolCallId を収集
+  const toolResultsMap = new Map<string, { toolName: string; output: any }>();
+  for (const msg of updatedMessages) {
+    if (msg.role === "tool") {
+      for (const item of msg.content) {
+        toolResultsMap.set(item.toolCallId, {
+          toolName: item.toolName,
+          output: item.output,
+        });
+      }
+    }
+  }
+
+  const normalizedMessages: Message[] = [];
+  let historyChanged = false;
+
+  for (let i = 0; i < updatedMessages.length; i++) {
+    const msg = updatedMessages[i];
+    if (!msg) continue;
+
+    if (msg.role === "tool") {
+      // すでに normalizedMessages に追加されている（前の assistant 処理で補正マージされた）可能性がある
+      const lastMsg = normalizedMessages[normalizedMessages.length - 1];
+      if (lastMsg && lastMsg.role === "tool" && lastMsg.id === msg.id) {
+        continue;
+      }
+      normalizedMessages.push(msg);
+      continue;
+    }
+
+    normalizedMessages.push(msg);
+
+    if (msg.role === "assistant" && msg.toolCalls && msg.toolCalls.length > 0) {
+      const nextMsg = updatedMessages[i + 1];
+      const missingResults = msg.toolCalls.filter(
+        (tc: { toolCallId: string; toolName: string }) => !toolResultsMap.has(tc.toolCallId)
+      );
+
+      if (missingResults.length > 0) {
+        historyChanged = true;
+
+        // ダミーのエラー結果を生成
+        const dummyResults = missingResults.map((tc: { toolCallId: string; toolName: string }) => ({
+          toolCallId: tc.toolCallId,
+          toolName: tc.toolName,
+          type: "tool-result" as const,
+          output: {
+            type: "error",
+            value: `Error: Tool execution failed or did not return a result.`,
+          },
+        }));
+
+        if (nextMsg && nextMsg.role === "tool") {
+          const updatedNextMsg: ToolMessage = {
+            ...nextMsg,
+            content: [...nextMsg.content, ...dummyResults],
+          };
+          normalizedMessages.push(updatedNextMsg);
+        } else {
+          const newToolMsg: ToolMessage = {
+            id: crypto.randomUUID(),
+            role: "tool",
+            content: dummyResults,
+          };
+          normalizedMessages.push(newToolMsg);
+        }
+      } else if (nextMsg && nextMsg.role === "tool") {
+        normalizedMessages.push(nextMsg);
+      }
+    }
+  }
+
+  // もし不整合が検出されて補正が行われた場合、状態も更新する
+  if (historyChanged) {
+    if (messagesRef) {
+      (messagesRef as any).current = normalizedMessages;
+    }
+    setMessages(() => normalizedMessages);
+  }
+
   // プロンプトの整形 (CoreMessage形式に変換)
-  const prompts: ModelMessage[] = updatedMessages.map((msg) => {
+  const prompts: ModelMessage[] = normalizedMessages.map((msg) => {
     switch (msg.role) {
       case "user":
         return { role: "user", content: msg.content };
@@ -83,7 +164,7 @@ export async function sendMessage({
   // AIモデルを呼び出してメッセージを受け取る
   const result = streamText({
     ...model,
-    system: getDynamicSystemPrompt(SYSTEM_PROMPT, updatedMessages),
+    system: getDynamicSystemPrompt(SYSTEM_PROMPT, normalizedMessages),
     messages: prompts,
     providerOptions: model.providerOptions,
     stopWhen: stepCountIs(10),

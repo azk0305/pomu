@@ -13,6 +13,23 @@ import { invokeAgentTool } from "./invokeAgent";
 import { activateSkillTool } from "./activateSkill";
 
 
+// エラーハンドリングラッパー：ツールの実行中に発生した例外をキャッチして、エラー結果オブジェクトを返す
+const safeExecute = <I, O>(
+  name: string,
+  fn: (input: I) => Promise<O> | O,
+) => {
+  return async (input: I) => {
+    try {
+      return await fn(input);
+    } catch (error: any) {
+      return {
+        type: "error",
+        value: `Error executing tool '${name}': ${error instanceof Error ? error.message : String(error)}`,
+      };
+    }
+  };
+};
+
 // AIツールの集合
 export const tools = {
   get_current_time: tool({
@@ -20,18 +37,18 @@ export const tools = {
     inputSchema: z.object({
       locale: z.string().optional(),
     }),
-    execute: async ({ locale }: { locale?: string }) => {
+    execute: safeExecute("get_current_time", async ({ locale }: { locale?: string }) => {
       return getCurrentTime(locale);
-    },
+    }),
   }),
   list_files: tool({
     description: "Get a list of files in the specified directory",
     inputSchema: z.object({
       dir: z.string().default("."),
     }),
-    execute: async ({ dir }: { dir: string }) => {
+    execute: safeExecute("list_files", async ({ dir }: { dir: string }) => {
       return listFilesTool(dir);
-    },
+    }),
   }),
   grep_files: tool({
     description: "Search for a keyword in files using ripgrep",
@@ -46,7 +63,7 @@ export const tools = {
         .optional()
         .describe("Glob pattern to filter files (e.g., '*.ts')."),
     }),
-    execute: async ({
+    execute: safeExecute("grep_files", async ({
       keyword,
       dir,
       glob,
@@ -56,7 +73,7 @@ export const tools = {
       glob?: string;
     }) => {
       return grepFilesTool(keyword, dir, glob);
-    },
+    }),
   }),
   read_file: tool({
     description:
@@ -73,7 +90,7 @@ export const tools = {
         .optional()
         .describe("1-based end line number (inclusive)"),
     }),
-    execute: async ({
+    execute: safeExecute("read_file", async ({
       filename,
       start_line,
       end_line,
@@ -83,20 +100,20 @@ export const tools = {
       end_line?: number;
     }) => {
       return readFileTool(filename, start_line, end_line);
-    },
+    }),
   }),
   make_dir: tool({
     description: "Create a new directory",
     inputSchema: z.object({
       dir: z.string().describe("The path to the directory to create"),
     }),
-    execute: async ({ dir }: { dir: string }) => {
+    execute: safeExecute("make_dir", async ({ dir }: { dir: string }) => {
       // const confirmed = await confirmStore.ask(`Create directory: ${dir}?`);
       // if (!confirmed) {
       //   return { type: "text", value: "Directory creation cancelled by user." };
       // }
       return makeDirTool(dir);
-    },
+    }),
   }),
   edit_file: tool({
     description:
@@ -110,7 +127,7 @@ export const tools = {
         ),
       new_string: z.string().describe("The new string to replace with"),
     }),
-    execute: async ({
+    execute: safeExecute("edit_file", async ({
       filename,
       old_string,
       new_string,
@@ -124,7 +141,7 @@ export const tools = {
         return { type: "text", value: "Edit operation cancelled by user." };
       }
       return editFileTool(filename, old_string, new_string);
-    },
+    }),
   }),
   write_file: tool({
     description: "Write content to a file",
@@ -132,7 +149,7 @@ export const tools = {
       filename: z.string().describe("The path to the file to write to"),
       content: z.string().describe("The content to write to the file"),
     }),
-    execute: async ({
+    execute: safeExecute("write_file", async ({
       filename,
       content,
     }: {
@@ -144,7 +161,7 @@ export const tools = {
         return { type: "text", value: "Write operation cancelled by user." };
       }
       return writeFileTool(filename, content);
-    },
+    }),
   }),
   run_command: tool({
     description: "Run a shell command",
@@ -155,13 +172,13 @@ export const tools = {
         .array()
         .describe("Optional arguments to pass to the command"),
     }),
-    execute: async ({ command, args }: { command: string; args: string[] }) => {
+    execute: safeExecute("run_command", async ({ command, args }: { command: string; args: string[] }) => {
       const confirmed = await confirmStore.ask(`Run command: ${command}?`);
       if (!confirmed) {
         return { type: "text", value: "Command execution cancelled by user." };
       }
       return runCommandTool(command, args);
-    },
+    }),
   }),
   invoke_agent: tool({
     description:
@@ -172,7 +189,7 @@ export const tools = {
         .describe("The name of the agent to invoke (e.g., 'gemini', 'pomu')"),
       prompt: z.string().describe("The prompt or task to delegate"),
     }),
-    execute: async ({
+    execute: safeExecute("invoke_agent", async ({
       agent_name,
       prompt,
     }: {
@@ -186,7 +203,7 @@ export const tools = {
         return { type: "text", value: "Agent invocation cancelled by user." };
       }
       return invokeAgentTool(agent_name, prompt);
-    },
+    }),
   }),
   activate_skill: tool({
     description:
@@ -196,8 +213,8 @@ export const tools = {
         .string()
         .describe("The name of the skill to activate (e.g., 'git-helper')"),
     }),
-    execute: async ({ name }: { name: string }) => {
+    execute: safeExecute("activate_skill", async ({ name }: { name: string }) => {
       return activateSkillTool(name);
-    },
+    }),
   }),
 };
