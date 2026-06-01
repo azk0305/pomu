@@ -2,6 +2,10 @@ import { google } from "@ai-sdk/google";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import dotenv from "dotenv";
 import path from "path";
+import { BasicTracerProvider, SimpleSpanProcessor } from "@opentelemetry/sdk-trace-base";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
+import { resourceFromAttributes } from "@opentelemetry/resources";
+import { trace } from "@opentelemetry/api";
 
 // 環境変数（.env）の読み込み
 dotenv.config({ path: path.resolve(__dirname, "../../", ".env") });
@@ -13,6 +17,32 @@ export const getModel = (
   modelId: string,
   options: any,
 ): any => {
+  const USE_WEAVE: string = process.env.USE_WEAVE!;
+  const WANDB_API_KEY: string = process.env.WANDB_API_KEY!;
+  const WANDB_PROJECT_NAME: string = process.env.WANDB_PROJECT_NAME!;
+  const WANDB_TEAM_NAME: string = process.env.WANDB_TEAM_NAME!;
+
+  // W&B Weave
+  if (USE_WEAVE === "true") {
+    const exporter = new OTLPTraceExporter({
+      url: "https://trace.wandb.ai/otel/v1/traces",
+      headers: {
+        "wandb-api-key": WANDB_API_KEY,
+      },
+    });
+
+    const wandbProvider = new BasicTracerProvider({
+      resource: resourceFromAttributes({
+        "wandb.entity": WANDB_TEAM_NAME,
+        "wandb.project": WANDB_PROJECT_NAME,
+      }),
+      spanProcessors: [new SimpleSpanProcessor(exporter)],
+    });
+
+    trace.setGlobalTracerProvider(wandbProvider);
+  }
+
+  // LLM Provider
   if (provider === "openai-compatible") {
     return {
       model: createOpenAICompatible({

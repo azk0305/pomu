@@ -69,7 +69,8 @@ export async function sendMessage({
             type: "tool-result",
             toolCallId: c.toolCallId,
             toolName: c.toolName,
-            output: c.output, // Note: some versions of the SDK use 'result' instead of 'output'
+            result: c.output,
+            output: { type: "text" as const, value: String(c.output) },
           })),
         };
 
@@ -79,10 +80,6 @@ export async function sendMessage({
     }
   });
 
-  // アシスタントメッセージの器を事前に作成（あるいは最初のレスポンス時に作成）
-  let currentAssistantMessageId = crypto.randomUUID();
-  let hasCreatedAssistantMessage = false;
-
   // AIモデルを呼び出してメッセージを受け取る
   const result = streamText({
     ...model,
@@ -90,6 +87,7 @@ export async function sendMessage({
     messages: prompts,
     providerOptions: model.providerOptions,
     stopWhen: stepCountIs(10),
+    experimental_telemetry: { isEnabled: true },
     tools,
     onFinish: (result) => {
       const tokens = result.usage.totalTokens ?? 0;
@@ -110,6 +108,9 @@ export async function sendMessage({
   });
 
   // ストリームでの処理
+  let currentAssistantMessageId = crypto.randomUUID();
+  let hasCreatedAssistantMessage = false;
+
   for await (const part of result.fullStream) {
     setMessages((prev) => {
       let next = [...prev];

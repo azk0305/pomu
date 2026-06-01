@@ -38,3 +38,6 @@ src/config/model.ts
 
 # Antigravity
 .antigravitycli/
+
+# Skills
+.pomu/skills/
