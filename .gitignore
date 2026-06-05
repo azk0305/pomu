@@ -41,3 +41,7 @@ src/config/model.ts
 
 # Skills
 .pomu/skills/
+
+# Docs
+docs/
+
