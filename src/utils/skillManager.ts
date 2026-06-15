@@ -64,11 +64,24 @@ function loadSkillFile(filePath: string): Skill | null {
   }
 }
 
+let cachedSkills: Skill[] | null = null;
+
+/**
+ * Invalidate the memory cache for scanned skills.
+ */
+export function clearSkillCache(): void {
+  cachedSkills = null;
+}
+
 /**
  * `skills` サブディレクトリ内の SKILL.md をスキャンする（ユーザレベル/プロジェクトレベル）
  * 両方に同名のスキルがある場合はプロジェクトレベルのものを優先し、ログに警告を表示する
  */
-export function scanSkills(): Skill[] {
+export function scanSkills(bypassCache = false): Skill[] {
+  if (cachedSkills && !bypassCache) {
+    return cachedSkills;
+  }
+
   const skillsMap = new Map<string, Skill>();
 
   // 1. User-level skills (e.g. ~/.pomu/skills/*)
@@ -126,7 +139,8 @@ export function scanSkills(): Skill[] {
     }
   }
 
-  return Array.from(skillsMap.values());
+  cachedSkills = Array.from(skillsMap.values());
+  return cachedSkills;
 }
 
 /**

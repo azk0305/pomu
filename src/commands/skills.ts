@@ -6,7 +6,7 @@ export const skillsCommand: Command = {
   name: "skills",
   description: "List all scanned skills and their activation status",
   execute: async (_args, context) => {
-    const scannedSkills = scanSkills();
+    const scannedSkills = scanSkills(true);
     const activeSkills = getActiveSkillsFromHistory(context.messagesRef.current ?? [], scannedSkills);
 
     let content = "";

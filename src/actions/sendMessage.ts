@@ -5,6 +5,7 @@ import { streamText, type ModelMessage, stepCountIs } from "ai";
 import { tools } from "../tools";
 import { SYSTEM_PROMPT } from "../config/systemPrompt";
 import { getDynamicSystemPrompt } from "../utils/skillManager";
+import { normalizeHistory, formatToModelMessages } from "../utils/historyNormalizer";
 
 interface SendMessageOptions {
   userContent: string;
@@ -37,78 +38,8 @@ export async function sendMessage({
   // ユーザーメッセージをメッセージリストに追加して画面へ表示
   setMessages(() => updatedMessages);
 
-  // --- メッセージ履歴の不整合（tool-callに対するtool-resultの欠落）を検出して補正 ---
-  // すべての tool メッセージから toolCallId を収集
-  const toolResultsMap = new Map<string, { toolName: string; output: any }>();
-  for (const msg of updatedMessages) {
-    if (msg.role === "tool") {
-      for (const item of msg.content) {
-        toolResultsMap.set(item.toolCallId, {
-          toolName: item.toolName,
-          output: item.output,
-        });
-      }
-    }
-  }
-
-  const normalizedMessages: Message[] = [];
-  let historyChanged = false;
-
-  for (let i = 0; i < updatedMessages.length; i++) {
-    const msg = updatedMessages[i];
-    if (!msg) continue;
-
-    if (msg.role === "tool") {
-      // すでに normalizedMessages に追加されている（前の assistant 処理で補正マージされた）可能性がある
-      const lastMsg = normalizedMessages[normalizedMessages.length - 1];
-      if (lastMsg && lastMsg.role === "tool" && lastMsg.id === msg.id) {
-        continue;
-      }
-      normalizedMessages.push(msg);
-      continue;
-    }
-
-    normalizedMessages.push(msg);
-
-    if (msg.role === "assistant" && msg.toolCalls && msg.toolCalls.length > 0) {
-      const nextMsg = updatedMessages[i + 1];
-      const missingResults = msg.toolCalls.filter(
-        (tc: { toolCallId: string; toolName: string }) => !toolResultsMap.has(tc.toolCallId)
-      );
-
-      if (missingResults.length > 0) {
-        historyChanged = true;
-
-        // ダミーのエラー結果を生成
-        const dummyResults = missingResults.map((tc: { toolCallId: string; toolName: string }) => ({
-          toolCallId: tc.toolCallId,
-          toolName: tc.toolName,
-          type: "tool-result" as const,
-          output: {
-            type: "error",
-            value: `Error: Tool execution failed or did not return a result.`,
-          },
-        }));
-
-        if (nextMsg && nextMsg.role === "tool") {
-          const updatedNextMsg: ToolMessage = {
-            ...nextMsg,
-            content: [...nextMsg.content, ...dummyResults],
-          };
-          normalizedMessages.push(updatedNextMsg);
-        } else {
-          const newToolMsg: ToolMessage = {
-            id: crypto.randomUUID(),
-            role: "tool",
-            content: dummyResults,
-          };
-          normalizedMessages.push(newToolMsg);
-        }
-      } else if (nextMsg && nextMsg.role === "tool") {
-        normalizedMessages.push(nextMsg);
-      }
-    }
-  }
+  // --- メッセージ履歴の不整合を補正して整形 ---
+  const { normalized: normalizedMessages, changed: historyChanged } = normalizeHistory(updatedMessages);
 
   // もし不整合が検出されて補正が行われた場合、状態も更新する
   if (historyChanged) {
@@ -119,47 +50,7 @@ export async function sendMessage({
   }
 
   // プロンプトの整形 (CoreMessage形式に変換)
-  const prompts: ModelMessage[] = normalizedMessages.map((msg) => {
-    switch (msg.role) {
-      case "user":
-        return { role: "user", content: msg.content };
-
-      case "assistant":
-        // If there are tool calls, content MUST be an array of parts
-        if (msg.toolCalls && msg.toolCalls.length > 0) {
-          return {
-            role: "assistant",
-            content: [
-              { type: "text", text: msg.content || "" },
-              ...msg.toolCalls.map((tc) => ({
-                type: "tool-call" as const,
-                toolCallId: tc.toolCallId,
-                toolName: tc.toolName,
-                input: tc.input,
-              })),
-            ],
-          };
-        }
-        // Otherwise, content can just be a string
-        return { role: "assistant", content: msg.content };
-
-      case "tool":
-        return {
-          role: "tool",
-          content: msg.content.map((c) => ({
-            type: "tool-result",
-            toolCallId: c.toolCallId,
-            toolName: c.toolName,
-            result: c.output,
-            output: { type: "text" as const, value: String(c.output) },
-          })),
-        };
-
-      default:
-        // Fallback for safety
-        return { role: "user", content: "" };
-    }
-  });
+  const prompts = formatToModelMessages(normalizedMessages);
 
   // AIモデルを呼び出してメッセージを受け取る
   const result = streamText({
