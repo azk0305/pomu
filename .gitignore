@@ -45,3 +45,5 @@ src/config/model.ts
 # Docs
 docs/
 
+# Old files
+v1/

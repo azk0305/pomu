@@ -1,0 +1,69 @@
+import { getModel } from "../providers/index.js";
+
+/**
+ * AI Model Configuration
+ *
+ * You can customize the model and its options here.
+ * This file is ignored by Git, so you can change it freely.
+ */
+
+export const models: Record<string, any> = {
+  gemma: getModel("google", null, "gemma-4-31b-it", {
+    maxOutputTokens: 65536,
+    temperature: 1.0,
+    topP: 0.95,
+    topK: 64,
+    providerOptions: {
+      google: {
+        generationConfig: {
+          thinkingConfig: {
+            thinkingLevel: "MINIMAL",
+          },
+        },
+      },
+    },
+  }),
+  mimo: getModel("openai-compatible", "xiaomi", "mimo-v2.5-pro", {
+    temperature: 1.0,
+    topP: 0.95,
+    frequencyPenalty: 0,
+    presencePenalty: 0,
+    providerOptions: {
+      xiaomi: {
+        thinking: {
+          type: "enabled", // "enabled" or "disabled"
+        },
+      },
+    },
+  }),
+  plamo_think: getModel("openai-compatible", "plamo", "plamo-3.0-prime", {
+    maxOutputTokens: 20000,
+    temperature: 0.3,
+    topP: 0.95,
+    frequencyPenalty: 0,
+    presencePenalty: 0,
+    providerOptions: {
+      plamo: {
+        reasoning: {
+          summary: "auto",
+          effort: "medium", // "medium" or "none"
+        },
+      },
+    },
+  }),
+  plamo_nonthink: getModel("openai-compatible", "plamo", "plamo-3.0-prime", {
+    maxOutputTokens: 20000,
+    temperature: 1.5,
+    topP: 0.95,
+    frequencyPenalty: 0,
+    presencePenalty: 0,
+    providerOptions: {
+      plamo: {
+        reasoning: {
+          summary: "auto",
+          effort: "none", // "medium" or "none"
+        },
+      },
+    },
+  }),
+};
